@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Link } from '@mui/material';
 import axios from 'axios'; // Sử dụng axios để gọi API
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 const Register = () => {
     const [username, setUsername] = useState('');
