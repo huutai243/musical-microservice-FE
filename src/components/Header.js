@@ -1,44 +1,42 @@
 // src/components/Header.js
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Button, Avatar, Menu, MenuItem, IconButton } from '@mui/material';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Header = () => {
-    const [user, setUser] = useState(null); // Lưu thông tin người dùng
-    const [anchorEl, setAnchorEl] = useState(null); // Quản lý dropdown menu
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+    const [anchorEl, setAnchorEl] = useState(null);
     const navigate = useNavigate();
 
-    // Lắng nghe trạng thái đăng nhập
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            if (user) {
-                setUser(user); // Lưu thông tin người dùng nếu đã đăng nhập
-            } else {
-                setUser(null); // Xóa thông tin người dùng nếu đăng xuất
-            }
-        });
-
-        return () => unsubscribe(); // Hủy đăng ký lắng nghe khi component unmount
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser) {
+            setUser(storedUser);
+        }
     }, []);
 
-    // Mở dropdown menu
     const handleMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
     };
 
-    // Đóng dropdown menu
     const handleMenuClose = () => {
         setAnchorEl(null);
     };
 
-    // Xử lý đăng xuất
     const handleLogout = async () => {
         try {
-            await signOut(auth); // Đăng xuất bằng Firebase
-            navigate('/'); // Chuyển hướng về trang chủ
-            handleMenuClose(); // Đóng dropdown menu
+            const refreshToken = localStorage.getItem('refreshToken');
+
+            await axios.post('http://localhost:9000/api/auth/logout', { refreshToken });
+
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+
+            setUser(null);
+            navigate('/');
+            handleMenuClose();
         } catch (error) {
             console.error('Lỗi đăng xuất:', error);
         }
@@ -52,7 +50,6 @@ const Header = () => {
                 </Typography>
                 {user ? (
                     <>
-                        {/* Hiển thị avatar và dropdown menu */}
                         <IconButton onClick={handleMenuOpen}>
                             <Avatar src={user.photoURL} alt={user.displayName} />
                         </IconButton>
@@ -65,7 +62,6 @@ const Header = () => {
                         </Menu>
                     </>
                 ) : (
-                    /* Hiển thị nút đăng nhập nếu chưa đăng nhập */
                     <Button color="inherit" href="/login">
                         Đăng nhập
                     </Button>
