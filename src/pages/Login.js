@@ -8,7 +8,9 @@ import {
     Grid,
     Link,
     Alert,
-    Paper
+    Paper,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -18,6 +20,7 @@ import axios from 'axios';
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -46,16 +49,6 @@ const Login = () => {
         }
     };
 
-    const handleGoogleLogin = async (e) => {
-        e.preventDefault();
-        console.log("Đăng nhập bằng Google");
-    };
-
-    const handleFacebookLogin = async (e) => {
-        e.preventDefault();
-        console.log("Đăng nhập bằng Facebook");
-    };
-
     return (
         <Box
             sx={{
@@ -63,7 +56,6 @@ const Login = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #926EF0, #5535A0)',
                 padding: 2
             }}
         >
@@ -73,7 +65,7 @@ const Login = () => {
                     sx={{
                         padding: 4,
                         borderRadius: 3,
-                        boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
+                        border: '2px solid #993300', // Viền màu #993300
                         backgroundColor: 'white',
                     }}
                 >
@@ -82,9 +74,9 @@ const Login = () => {
                         component="h1"
                         align="center"
                         gutterBottom
-                        sx={{ fontWeight: 'bold', color: '#3A246E' }}
+                        sx={{ fontWeight: 'bold', color: '#993300' }}
                     >
-                        Đăng nhập
+                        Đăng Nhập
                     </Typography>
 
                     {error && (
@@ -111,20 +103,43 @@ const Login = () => {
                             margin="normal"
                             required
                         />
+
+                        {/* Ghi nhớ tôi & Quên mật khẩu */}
+                        <Grid container alignItems="center" justifyContent="space-between" sx={{ mt: 1, mb: 2 }}>
+                            <Grid item>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={rememberMe}
+                                            onChange={(e) => setRememberMe(e.target.checked)}
+                                            sx={{ color: '#993300' }}
+                                        />
+                                    }
+                                    label="Ghi nhớ tôi"
+                                    sx={{ color: '#993300' }}
+                                />
+                            </Grid>
+                            <Grid item>
+                                <Link href="/forgot-password" sx={{ fontWeight: 'bold', color: '#993300' }}>
+                                    Quên mật khẩu?
+                                </Link>
+                            </Grid>
+                        </Grid>
+
                         <Button
                             type="submit"
                             fullWidth
                             variant="contained"
                             sx={{
-                                mt: 3,
+                                mt: 1,
                                 mb: 2,
-                                backgroundColor: '#5535A0',
+                                backgroundColor: '#993300',
                                 color: 'white',
                                 fontWeight: 'bold',
-                                '&:hover': { backgroundColor: '#3A246E' }
+                                '&:hover': { backgroundColor: '#7A2600' }
                             }}
                         >
-                            Đăng nhập
+                            Đăng Nhập
                         </Button>
                     </form>
 
@@ -142,7 +157,6 @@ const Login = () => {
                                     transition: 'transform 0.2s ease-in-out',
                                     '&:hover': { backgroundColor: '#C1351D', transform: 'scale(1.1)' }
                                 }}
-                                onClick={handleGoogleLogin}
                             >
                                 <GoogleIcon />
                             </Button>
@@ -159,7 +173,6 @@ const Login = () => {
                                     transition: 'transform 0.2s ease-in-out',
                                     '&:hover': { backgroundColor: '#1466C0', transform: 'scale(1.1)' }
                                 }}
-                                onClick={handleFacebookLogin}
                             >
                                 <FacebookIcon />
                             </Button>
@@ -168,7 +181,7 @@ const Login = () => {
 
                     <Typography variant="body1" align="center" sx={{ mt: 2 }}>
                         Chưa có tài khoản?{' '}
-                        <Link href="/register" sx={{ fontWeight: 'bold', color: '#5535A0' }}>
+                        <Link href="/register" sx={{ fontWeight: 'bold', color: '#993300' }}>
                             Đăng ký ngay
                         </Link>
                     </Typography>

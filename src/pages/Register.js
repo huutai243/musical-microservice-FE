@@ -7,7 +7,11 @@ import {
     Box,
     Link,
     Alert,
-    Paper
+    Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -18,6 +22,7 @@ const Register = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [openDialog, setOpenDialog] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -35,8 +40,11 @@ const Register = () => {
             );
 
             if (response.status === 200 && response.data.message) {
-                alert(response.data.message);
-                navigate('/login');
+                setOpenDialog(true); // Mở Dialog
+                setTimeout(() => {
+                    setOpenDialog(false); // Đóng Dialog sau 4 giây
+                    navigate('/login'); // Chuyển hướng sau khi đóng Dialog
+                }, 4000);
             } else {
                 setError('Đăng ký thất bại. Server không trả về dữ liệu mong đợi.');
             }
@@ -53,7 +61,6 @@ const Register = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #926EF0, #5535A0)',
                 padding: 2
             }}
         >
@@ -63,7 +70,7 @@ const Register = () => {
                     sx={{
                         padding: 4,
                         borderRadius: 3,
-                        boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
+                        border: '2px solid #993300', // Viền màu #993300
                         backgroundColor: 'white',
                     }}
                 >
@@ -72,9 +79,9 @@ const Register = () => {
                         component="h1"
                         align="center"
                         gutterBottom
-                        sx={{ fontWeight: 'bold', color: '#3A246E' }}
+                        sx={{ fontWeight: 'bold', color: '#993300' }}
                     >
-                        Đăng ký tài khoản
+                        Đăng Ký
                     </Typography>
 
                     {error && (
@@ -126,10 +133,10 @@ const Register = () => {
                             sx={{
                                 mt: 3,
                                 mb: 2,
-                                backgroundColor: '#5535A0',
+                                backgroundColor: '#993300',
                                 color: 'white',
                                 fontWeight: 'bold',
-                                '&:hover': { backgroundColor: '#3A246E' }
+                                '&:hover': { backgroundColor: '#7A2600' }
                             }}
                         >
                             Đăng ký ngay
@@ -138,12 +145,53 @@ const Register = () => {
 
                     <Typography variant="body1" align="center" sx={{ mt: 2 }}>
                         Đã có tài khoản?{' '}
-                        <Link href="/login" sx={{ fontWeight: 'bold', color: '#5535A0' }}>
+                        <Link href="/login" sx={{ fontWeight: 'bold', color: '#993300' }}>
                             Đăng nhập ngay
                         </Link>
                     </Typography>
                 </Paper>
             </Container>
+
+            {/* Dialog thông báo thành công */}
+            <Dialog
+                open={openDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+                sx={{
+                    '& .MuiPaper-root': {
+                        backgroundColor: 'white',
+                        color: '#993300',
+                        textAlign: 'center',
+                        borderRadius: 3,
+                        padding: 2,
+                        boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.3)',
+                    }
+                }}
+            >
+                <DialogTitle
+                    id="alert-dialog-title"
+                    sx={{
+                        fontSize: '1.8rem',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        color: '#993300',
+                    }}
+                >
+                    Thành Công!
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText
+                        id="alert-dialog-description"
+                        sx={{
+                            color: '#993300',
+                            fontSize: '1.2rem',
+                            fontWeight: '500',
+                        }}
+                    >
+                        Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.
+                    </DialogContentText>
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 };
