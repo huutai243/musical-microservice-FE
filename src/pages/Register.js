@@ -11,7 +11,8 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogContentText
+    DialogContentText,
+    CircularProgress
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -23,13 +24,16 @@ const Register = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
         if (password !== confirmPassword) {
             setError('Mật khẩu và xác nhận mật khẩu không khớp.');
+            setLoading(false);
             return;
         }
 
@@ -52,6 +56,7 @@ const Register = () => {
             console.error('Lỗi đăng ký:', error);
             setError(error.response?.data?.message || 'Đăng ký thất bại, thử lại.');
         }
+        setLoading(false);
     };
 
     return (
@@ -70,8 +75,8 @@ const Register = () => {
                     elevation={6}
                     sx={{
                         padding: 4,
-                        borderRadius: 4, // Bo tròn form
-                        backgroundColor: 'white', // Xóa viền
+                        borderRadius: 4,
+                        backgroundColor: 'white',
                     }}
                 >
                     <Typography
@@ -161,11 +166,12 @@ const Register = () => {
                                 backgroundColor: '#993300',
                                 color: 'white',
                                 fontWeight: 'bold',
-                                borderRadius: 4, // Bo tròn nút đăng ký
+                                borderRadius: 4,
                                 '&:hover': { backgroundColor: '#7A2600' }
                             }}
+                            disabled={loading}
                         >
-                            Đăng ký ngay
+                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Đăng ký ngay'}
                         </Button>
                     </form>
 
@@ -178,7 +184,6 @@ const Register = () => {
                 </Paper>
             </Container>
 
-            {/* Dialog thông báo thành công */}
             <Dialog
                 open={openDialog}
                 aria-labelledby="alert-dialog-title"
@@ -188,7 +193,7 @@ const Register = () => {
                         backgroundColor: 'white',
                         color: '#993300',
                         textAlign: 'center',
-                        borderRadius: 4, // Bo tròn hộp thoại
+                        borderRadius: 4,
                         padding: 2,
                         boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.3)',
                     }
