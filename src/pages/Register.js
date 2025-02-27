@@ -40,10 +40,10 @@ const Register = () => {
             );
 
             if (response.status === 200 && response.data.message) {
-                setOpenDialog(true); // Mở Dialog
+                setOpenDialog(true);
                 setTimeout(() => {
-                    setOpenDialog(false); // Đóng Dialog sau 4 giây
-                    navigate('/login'); // Chuyển hướng sau khi đóng Dialog
+                    setOpenDialog(false);
+                    navigate('/login');
                 }, 4000);
             } else {
                 setError('Đăng ký thất bại. Server không trả về dữ liệu mong đợi.');
@@ -61,7 +61,8 @@ const Register = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: 2
+                padding: 2,
+                background: 'linear-gradient(to bottom, #ffffff, #c07b50)',
             }}
         >
             <Container maxWidth="sm">
@@ -69,9 +70,8 @@ const Register = () => {
                     elevation={6}
                     sx={{
                         padding: 4,
-                        borderRadius: 3,
-                        border: '2px solid #993300', // Viền màu #993300
-                        backgroundColor: 'white',
+                        borderRadius: 4, // Bo tròn form
+                        backgroundColor: 'white', // Xóa viền
                     }}
                 >
                     <Typography
@@ -98,6 +98,12 @@ const Register = () => {
                             onChange={(e) => setUsername(e.target.value)}
                             margin="normal"
                             required
+                            sx={{
+                                borderRadius: 6,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 6,
+                                },
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -107,6 +113,12 @@ const Register = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             margin="normal"
                             required
+                            sx={{
+                                borderRadius: 6,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 6,
+                                },
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -116,6 +128,12 @@ const Register = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             margin="normal"
                             required
+                            sx={{
+                                borderRadius: 6,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 6,
+                                },
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -125,7 +143,14 @@ const Register = () => {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             margin="normal"
                             required
+                            sx={{
+                                borderRadius: 6,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 6,
+                                },
+                            }}
                         />
+
                         <Button
                             type="submit"
                             fullWidth
@@ -136,6 +161,7 @@ const Register = () => {
                                 backgroundColor: '#993300',
                                 color: 'white',
                                 fontWeight: 'bold',
+                                borderRadius: 4, // Bo tròn nút đăng ký
                                 '&:hover': { backgroundColor: '#7A2600' }
                             }}
                         >
@@ -162,7 +188,7 @@ const Register = () => {
                         backgroundColor: 'white',
                         color: '#993300',
                         textAlign: 'center',
-                        borderRadius: 3,
+                        borderRadius: 4, // Bo tròn hộp thoại
                         padding: 2,
                         boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.3)',
                     }

@@ -56,7 +56,8 @@ const Login = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: 2
+                padding: 2,
+                background: 'linear-gradient(to bottom, #ffffff, #c07b50)',
             }}
         >
             <Container maxWidth="sm">
@@ -64,9 +65,8 @@ const Login = () => {
                     elevation={6}
                     sx={{
                         padding: 4,
-                        borderRadius: 3,
-                        border: '2px solid #993300', // Viền màu #993300
-                        backgroundColor: 'white',
+                        borderRadius: 4, // Bo tròn form
+                        backgroundColor: 'white', // Xóa viền
                     }}
                 >
                     <Typography
@@ -93,6 +93,12 @@ const Login = () => {
                             onChange={(e) => setUsername(e.target.value)}
                             margin="normal"
                             required
+                            sx={{
+                                borderRadius: 6, // Bo tròn input
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 6, // Bo tròn viền
+                                },
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -102,6 +108,12 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             margin="normal"
                             required
+                            sx={{
+                                borderRadius: 6, // Bo tròn input
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 6, // Bo tròn viền
+                                },
+                            }}
                         />
 
                         {/* Ghi nhớ tôi & Quên mật khẩu */}
@@ -136,6 +148,7 @@ const Login = () => {
                                 backgroundColor: '#993300',
                                 color: 'white',
                                 fontWeight: 'bold',
+                                borderRadius: 4, // Bo tròn nút đăng nhập
                                 '&:hover': { backgroundColor: '#7A2600' }
                             }}
                         >
@@ -155,6 +168,7 @@ const Login = () => {
                                     minWidth: 'auto',
                                     padding: '10px',
                                     transition: 'transform 0.2s ease-in-out',
+                                    borderRadius: 4, // Bo tròn nút Google
                                     '&:hover': { backgroundColor: '#C1351D', transform: 'scale(1.1)' }
                                 }}
                             >
@@ -171,6 +185,7 @@ const Login = () => {
                                     minWidth: 'auto',
                                     padding: '10px',
                                     transition: 'transform 0.2s ease-in-out',
+                                    borderRadius: 4, // Bo tròn nút Facebook
                                     '&:hover': { backgroundColor: '#1466C0', transform: 'scale(1.1)' }
                                 }}
                             >
