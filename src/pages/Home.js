@@ -1,182 +1,155 @@
-// src/pages/Home.js
-import React from 'react';
-import { Container, Typography, Grid, Card, CardContent, CardMedia, Button, Box } from '@mui/material';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import React, { useState, useEffect } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { Container, Typography, Grid, Card, CardContent, CardMedia, IconButton, Button, Divider } from "@mui/material";
+import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 
-// Dữ liệu mẫu
-const products = [
-    {
-        id: 1,
-        name: 'Guitar Acoustic',
-        price: '2,500,000 VND',
-        image: 'https://via.placeholder.com/300',
-    },
-    {
-        id: 2,
-        name: 'Piano Điện',
-        price: '15,000,000 VND',
-        image: 'https://via.placeholder.com/300',
-    },
-    {
-        id: 3,
-        name: 'Trống Jazz',
-        price: '8,000,000 VND',
-        image: 'https://via.placeholder.com/300',
-    },
-    {
-        id: 4,
-        name: 'Violin',
-        price: '5,000,000 VND',
-        image: 'https://via.placeholder.com/300',
-    },
-];
+const productCategories = [1, 2, 3, 4, 5, 6, 7, 8];
+const banners = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg"];
+const bestSellingProducts = new Array(10).fill({
+    name: "Đàn Guitar Acoustic",
+    image: "/guitar.jpg",
+    price: "1,500,000 VND",
+    originalPrice: "2,000,000 VND"
+});
 
-const categories = [
-    { id: 1, name: 'Guitar', image: 'https://via.placeholder.com/200' },
-    { id: 2, name: 'Piano', image: 'https://via.placeholder.com/200' },
-    { id: 3, name: 'Trống', image: 'https://via.placeholder.com/200' },
-    { id: 4, name: 'Violin', image: 'https://via.placeholder.com/200' },
-];
-
-const testimonials = [
-    {
-        id: 1,
-        name: 'Nguyễn Văn A',
-        comment: 'Sản phẩm chất lượng, giao hàng nhanh chóng!',
-    },
-    {
-        id: 2,
-        name: 'Trần Thị B',
-        comment: 'Nhạc cụ âm thanh tuyệt vời, giá cả hợp lý.',
-    },
-];
-
-// Cấu hình slider
-const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-};
+// Thêm dữ liệu sản phẩm mới
+const newProducts = new Array(10).fill({
+    name: "Đàn ukulele Classic",
+    image: "/ukulele.jpg",
+    price: "1,200,000 VND",
+    originalPrice: "1,800,000 VND"
+});
 
 const Home = () => {
+    const [startIndex, setStartIndex] = useState(0);
+    const itemsPerPage = 5;
+    const [bannerIndex, setBannerIndex] = useState(0);
+    const [hovered, setHovered] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setBannerIndex((prevIndex) => (prevIndex + 1) % banners.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleNext = () => {
+        if (startIndex + itemsPerPage < productCategories.length) {
+            setStartIndex(startIndex + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (startIndex > 0) {
+            setStartIndex(startIndex - 1);
+        }
+    };
+
     return (
         <div>
             <Header />
-            {/* Slider/Carousel */}
-            <Box sx={{ mb: 4 }}>
-                <Slider {...sliderSettings}>
-                    <div>
-                        <img src="https://via.placeholder.com/1200x400" alt="Slide 1" style={{ width: '100%' }} />
-                    </div>
-                    <div>
-                        <img src="https://via.placeholder.com/1200x400" alt="Slide 2" style={{ width: '100%' }} />
-                    </div>
-                    <div>
-                        <img src="https://via.placeholder.com/1200x400" alt="Slide 3" style={{ width: '100%' }} />
-                    </div>
-                </Slider>
-            </Box>
 
-            <Container>
-                {/* Giới thiệu cửa hàng */}
-                <Box sx={{ textAlign: 'center', mb: 6 }}>
-                    <Typography variant="h4" component="h2" gutterBottom>
-                        Giới thiệu về cửa hàng
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Chúng tôi cung cấp các loại nhạc cụ chất lượng cao với giá cả phải chăng. Hãy khám phá và tìm kiếm nhạc cụ phù hợp với bạn!
-                    </Typography>
-                </Box>
-
-                {/* Danh mục sản phẩm */}
-                <Box sx={{ mb: 6 }}>
-                    <Typography variant="h4" component="h2" align="center" gutterBottom>
-                        Danh mục sản phẩm
-                    </Typography>
-                    <Grid container spacing={4}>
-                        {categories.map((category) => (
-                            <Grid item key={category.id} xs={12} sm={6} md={3}>
-                                <Card>
-                                    <CardMedia
-                                        component="img"
-                                        height="140"
-                                        image={category.image}
-                                        alt={category.name}
-                                    />
-                                    <CardContent>
-                                        <Typography variant="h6" component="div" align="center">
-                                            {category.name}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Box>
-
-                {/* Sản phẩm nổi bật */}
-                <Box sx={{ mb: 6 }}>
-                    <Typography variant="h4" component="h2" align="center" gutterBottom>
-                        Sản phẩm nổi bật
-                    </Typography>
-                    <Grid container spacing={4}>
-                        {products.map((product) => (
-                            <Grid item key={product.id} xs={12} sm={6} md={4}>
-                                <Card>
-                                    <CardMedia
-                                        component="img"
-                                        height="200"
-                                        image={product.image}
-                                        alt={product.name}
-                                    />
-                                    <CardContent>
-                                        <Typography variant="h6" component="div">
-                                            {product.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {product.price}
-                                        </Typography>
-                                        <Button variant="contained" color="primary" sx={{ mt: 2 }}>
-                                            Xem chi tiết
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Box>
-
-                {/* Đánh giá từ khách hàng */}
-                <Box sx={{ mb: 6 }}>
-                    <Typography variant="h4" component="h2" align="center" gutterBottom>
-                        Đánh giá từ khách hàng
-                    </Typography>
-                    <Grid container spacing={4}>
-                        {testimonials.map((testimonial) => (
-                            <Grid item key={testimonial.id} xs={12} sm={6} md={4}>
-                                <Card>
-                                    <CardContent>
-                                        <Typography variant="body1" component="div" align="center">
-                                            "{testimonial.comment}"
-                                        </Typography>
-                                        <Typography variant="subtitle1" align="center" sx={{ mt: 2 }}>
-                                            - {testimonial.name}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Box>
+            {/* Banner */}
+            <Container maxWidth="lg" style={{ marginTop: 20, textAlign: "center", position: "relative", overflow: "hidden" }}
+                       onMouseEnter={() => setHovered(true)}
+                       onMouseLeave={() => setHovered(false)}>
+                <div style={{ display: "flex", transition: "transform 0.7s ease-in-out", transform: `translateX(-${bannerIndex * 100}%)` }}>
+                    {banners.map((banner, index) => (
+                        <Card key={index} style={{ minWidth: "100%", height: 300, position: "relative", backgroundColor: "#ddd" }}>
+                            <CardMedia component="img" height="300" image={banner} alt="Banner" />
+                        </Card>
+                    ))}
+                </div>
+                {hovered && (
+                    <>
+                        <IconButton onClick={() => setBannerIndex((bannerIndex - 1 + banners.length) % banners.length)}
+                                    style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#993300" }}>
+                            <ArrowBackIos />
+                        </IconButton>
+                        <IconButton onClick={() => setBannerIndex((bannerIndex + 1) % banners.length)}
+                                    style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#993300" }}>
+                            <ArrowForwardIos />
+                        </IconButton>
+                    </>
+                )}
             </Container>
+
+            {/* Danh mục sản phẩm */}
+            <Container maxWidth="lg" style={{ marginTop: 40, position: "relative" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography variant="h5" gutterBottom style={{ color: "#993300" }}>Danh Mục Sản Phẩm</Typography>
+                    <div>
+                        <IconButton onClick={handlePrev} disabled={startIndex === 0} style={{ color: "#993300" }}>
+                            <ArrowBackIos />
+                        </IconButton>
+                        <IconButton onClick={handleNext} disabled={startIndex + itemsPerPage >= productCategories.length} style={{ color: "#993300" }}>
+                            <ArrowForwardIos />
+                        </IconButton>
+                    </div>
+                </div>
+                <Grid container spacing={4}>
+                    {productCategories.slice(startIndex, startIndex + itemsPerPage).map((item, index) => (
+                        <Grid item xs={2.4} key={index}>
+                            <Card style={{ transition: "0.3s", cursor: "pointer", borderRadius: "12px" }}
+                                  onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 4px 8px rgba(153, 51, 0, 0.5)"}
+                                  onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}>
+                                <CardMedia component="img" height="240" image="/guitar.jpg" alt="Đàn Guitar" style={{ borderRadius: "12px 12px 0 0" }} />
+                                <CardContent style={{ backgroundColor: "#8B4513", color: "#fff", textAlign: "center", borderRadius: "0 0 12px 12px" }}>
+                                    <Typography variant="subtitle1">Đàn Guitar</Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Container>
+
+            {/* Sản phẩm bán chạy */}
+            <Container maxWidth="lg" style={{ marginTop: 40 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="h5" style={{ color: "#993300" }}>Sản Phẩm Bán Chạy</Typography>
+                    <Button variant="outlined" style={{ color: "#993300", borderColor: "#993300" }}>Xem thêm</Button>
+                </div>
+                <Grid container spacing={4}>
+                    {bestSellingProducts.map((product, index) => (
+                        <Grid item xs={2.4} key={index}>
+                            <Card style={{ borderRadius: "12px", transition: "0.3s", cursor: "pointer", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
+                                <CardMedia component="img" height="240" image={product.image} alt={product.name} />
+                                <Divider />
+                                <CardContent>
+                                    <Typography variant="subtitle1">{product.name}</Typography>
+                                    <Typography variant="body1" style={{ fontWeight: "bold", color: "#993300" }}>{product.price}</Typography>
+                                    <Typography variant="body2" style={{ textDecoration: "line-through", color: "#999" }}>{product.originalPrice}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Container>
+
+            {/* Sản phẩm mới */}
+            <Container maxWidth="lg" style={{ marginTop: 40 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Typography variant="h5" style={{ color: "#993300" }}>Sản Phẩm Mới</Typography>
+                    <Button variant="outlined" style={{ color: "#993300", borderColor: "#993300" }}>Xem thêm</Button>
+                </div>
+                <Grid container spacing={4}>
+                    {newProducts.map((product, index) => (
+                        <Grid item xs={2.4} key={index}>
+                            <Card style={{ borderRadius: "12px", transition: "0.3s", cursor: "pointer", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
+                                <CardMedia component="img" height="240" image={product.image} alt={product.name} />
+                                <Divider />
+                                <CardContent>
+                                    <Typography variant="subtitle1">{product.name}</Typography>
+                                    <Typography variant="body1" style={{ fontWeight: "bold", color: "#993300" }}>{product.price}</Typography>
+                                    <Typography variant="body2" style={{ textDecoration: "line-through", color: "#999" }}>{product.originalPrice}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Container>
+
             <Footer />
         </div>
     );
