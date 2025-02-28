@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import backgroundImage from '../image/background.jpg'; // Import ảnh nền giống Login.js
 
 const Register = () => {
     const [username, setUsername] = useState('');
@@ -67,20 +68,30 @@ const Register = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: 2,
-                background: 'linear-gradient(to bottom, #ffffff, #c07b50)',
+                backgroundImage: `url(${backgroundImage})`, 
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
             }}
         >
-            <Container maxWidth="sm">
+            <Container maxWidth="xs"> 
                 <Paper
                     elevation={6}
                     sx={{
                         padding: 4,
-                        borderRadius: 4,
+                        borderRadius: '12px', 
                         backgroundColor: 'white',
+                        maxWidth: '380px', 
+                        boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.2)', 
+                        transition: 'all 0.3s ease-in-out', 
+                        '&:hover': {
+                            transform: 'scale(1.03)', 
+                            boxShadow: '0px 12px 32px rgba(0, 0, 0, 0.3)', 
+                        }
                     }}
                 >
                     <Typography
-                        variant="h4"
+                        variant="h5"
                         component="h1"
                         align="center"
                         gutterBottom
@@ -184,6 +195,7 @@ const Register = () => {
                 </Paper>
             </Container>
 
+            {/* Dialog thông báo đăng ký thành công */}
             <Dialog
                 open={openDialog}
                 aria-labelledby="alert-dialog-title"

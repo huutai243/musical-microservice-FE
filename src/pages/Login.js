@@ -16,6 +16,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import backgroundImage from '../image/background.jpg';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -57,28 +58,37 @@ const Login = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: 2,
-                background: 'linear-gradient(to bottom, #ffffff, #c07b50)',
+                backgroundImage: `url(${backgroundImage})`, 
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
             }}
         >
-            <Container maxWidth="sm">
-                <Paper
-                    elevation={6}
-                    sx={{
-                        padding: 4,
-                        borderRadius: 4, // Bo tròn form
-                        backgroundColor: 'white', // Xóa viền
-                    }}
+           <Container maxWidth="xs"> 
+            <Paper
+                elevation={6}
+                sx={{
+                    padding: 4,
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    maxWidth: '380px', 
+                    boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.2)', 
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                        transform: 'scale(1.03)', 
+                        boxShadow: '0px 12px 32px rgba(0, 0, 0, 0.3)', 
+                    }
+                }}
+            >
+                <Typography
+                    variant="h5"
+                    component="h1"
+                    align="center"
+                    gutterBottom
+                    sx={{ fontWeight: 'bold', color: '#993300' }}
                 >
-                    <Typography
-                        variant="h4"
-                        component="h1"
-                        align="center"
-                        gutterBottom
-                        sx={{ fontWeight: 'bold', color: '#993300' }}
-                    >
-                        Đăng Nhập
-                    </Typography>
-
+                    Đăng Nhập
+                </Typography>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
                             {error}
