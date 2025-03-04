@@ -3,16 +3,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Container, Typography, Grid, Card, CardContent, CardMedia, IconButton, Button, Divider } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 const productCategories = [1, 2, 3, 4, 5, 6, 7, 8];
 const banners = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg"];
-const bestSellingProducts = new Array(10).fill({
-    name: "Đàn Guitar Acoustic",
-    image: "/guitar.jpg",
-    price: "1,500,000 VND",
-    originalPrice: "2,000,000 VND"
-});
-
 // Thêm dữ liệu sản phẩm mới
 const newProducts = new Array(10).fill({
     name: "Đàn ukulele Classic",
@@ -22,10 +16,19 @@ const newProducts = new Array(10).fill({
 });
 
 const Home = () => {
+    const navigate = useNavigate()
     const [startIndex, setStartIndex] = useState(0);
     const itemsPerPage = 5;
     const [bannerIndex, setBannerIndex] = useState(0);
     const [hovered, setHovered] = useState(false);
+    const [bestSellingProducts, setBestSellingProducts] = useState([]);
+
+    useEffect(() => {
+        fetch("http://localhost:9000/api/products")
+            .then(response => response.json())
+            .then(data => setBestSellingProducts(data))
+            .catch(error => console.error("Error fetching products:", error));
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -113,13 +116,27 @@ const Home = () => {
                 <Grid container spacing={4}>
                     {bestSellingProducts.map((product, index) => (
                         <Grid item xs={2.4} key={index}>
-                            <Card style={{ borderRadius: "12px", transition: "0.3s", cursor: "pointer", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-                                <CardMedia component="img" height="240" image={product.image} alt={product.name} />
+                            <Card
+                                style={{ cursor: "pointer" }}
+                                onClick={() => navigate(`/product/${product.id}`)}
+                            >
+                                <CardMedia component="img" height="240" image={product.imageUrl} alt={product.name} />
                                 <Divider />
-                                <CardContent>
-                                    <Typography variant="subtitle1">{product.name}</Typography>
-                                    <Typography variant="body1" style={{ fontWeight: "bold", color: "#993300" }}>{product.price}</Typography>
-                                    <Typography variant="body2" style={{ textDecoration: "line-through", color: "#999" }}>{product.originalPrice}</Typography>
+                                <CardContent
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "flex-start", // Căn trái nội dung
+                                        justifyContent: "space-between", // Giữ khoảng cách giữa tên và giá
+                                        minHeight: 80, // Đặt chiều cao tối thiểu để các Card đồng đều
+                                    }}
+                                >
+                                    <Typography variant="subtitle1" sx={{ flexGrow: 1, wordBreak: "break-word" }}>
+                                        {product.name}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: "bold", color: "#993300" }}>
+                                        {product.price} VND
+                                    </Typography>
                                 </CardContent>
                             </Card>
                         </Grid>

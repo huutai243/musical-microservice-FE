@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Grid, TextField, Button, IconButton } from '@mui/material';
+import { Box, Divider, Typography, Grid, TextField, Button, IconButton } from '@mui/material';
 import VisaIcon from '@mui/icons-material/CreditCard'; // Thay thế bằng biểu tượng VISA thực tế
 import MasterCardIcon from '@mui/icons-material/Payment'; // Thay thế bằng biểu tượng MasterCard thực tế
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -7,9 +7,10 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 
 const Footer = () => {
     return (
-        <Box sx={{ bgcolor: 'white', color: '#993300', p: 4 }}>
-            <Grid container spacing={4}>
-                <Grid item xs={12} sm={3}>
+        <Box sx={{ bgcolor: 'white', color: '#993300' }}>
+            <Divider sx={{ mb: 2, borderColor: "#993300", borderWidth: 2 }} />
+            <Grid sx={{ p: 4 }} container spacing={4}>
+                <Grid  item xs={12} sm={3}>
                     <Typography variant="h6">Krist</Typography>
                     <Typography variant="body2">(704) 555-0127</Typography>
                     <Typography variant="body2">krist@example.com</Typography>
