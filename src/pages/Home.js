@@ -51,12 +51,10 @@ const Home = () => {
     };
 
     return (
+        
         <div style={{ background: 'linear-gradient(to right, #f0f0f0, #e0e0e0)', minHeight: '100vh' }}>
             <div>
                 <Header />
-
-
-
                 {/* Banner */}
                 <Container maxWidth="lg" style={{ marginTop: 20, textAlign: "center", position: "relative", overflow: "hidden" }}
                     onMouseEnter={() => setHovered(true)}
