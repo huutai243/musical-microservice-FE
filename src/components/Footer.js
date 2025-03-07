@@ -1,20 +1,20 @@
 import React from 'react';
-import { Box, Divider, Typography, Grid, TextField, Button, IconButton } from '@mui/material';
-import VisaIcon from '@mui/icons-material/CreditCard'; // Thay thế bằng biểu tượng VISA thực tế
-import MasterCardIcon from '@mui/icons-material/Payment'; // Thay thế bằng biểu tượng MasterCard thực tế
+import { Box, Typography, Grid, TextField, Button, IconButton } from '@mui/material';
+import CreditCardIcon from '@mui/icons-material/CreditCard'; // Visa, Mastercard, AMEX
+import PaymentIcon from '@mui/icons-material/Payment'; // Paypal
+import GoogleIcon from '@mui/icons-material/Google'; // Google Pay
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
 
 const Footer = () => {
     return (
-        <Box sx={{ bgcolor: 'white', color: '#993300' }}>
-            <Divider sx={{ mb: 2, borderColor: "#993300", borderWidth: 2 }} />
-            <Grid sx={{ p: 4 }} container spacing={4}>
-                <Grid  item xs={12} sm={3}>
-                    <Typography variant="h6">Krist</Typography>
+        <Box sx={{ bgcolor: 'white', color: '#993300', p: 4, boxShadow: '0px 4px 10px rgba(1, 1, 1, 1)', marginTop: 4 }}>
+            <Grid container spacing={4}>
+                <Grid item xs={12} sm={3}>
+                    <Typography variant="h6">Nhạc cụ Việt Nam</Typography>
                     <Typography variant="body2">(704) 555-0127</Typography>
-                    <Typography variant="body2">krist@example.com</Typography>
-                    <Typography variant="body2">3891 Ranchview Dr. Richardson, California 62639</Typography>
+                    <Typography variant="body2">ungnhophu@gamil.com</Typography>
+                    <Typography variant="body2">Hồ Chí Minh</Typography>
                 </Grid>
                 <Grid item xs={12} sm={3}>
                     <Typography variant="subtitle1">Information</Typography>
@@ -36,7 +36,7 @@ const Footer = () => {
                     <Typography variant="subtitle1">Subscribe</Typography>
                     <Typography variant="body2">Enter your email below to be the first to know about new collections and product launches.</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                        <TextField variant="outlined" size="small" placeholder="Your Email" sx={{ mr: 1, flexGrow: 1, color : 'white' }} />
+                        <TextField variant="outlined" size="small" placeholder="Your Email" sx={{ mr: 1, flexGrow: 1, color: 'white' }} />
                         <Button variant="contained">→</Button>
                     </Box>
                 </Grid>
@@ -44,9 +44,12 @@ const Footer = () => {
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4 }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <IconButton color="inherit"><VisaIcon /></IconButton>
-                    <IconButton color="inherit"><MasterCardIcon /></IconButton>
-                    {/* Thêm các biểu tượng thanh toán khác nếu cần */}
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <img src="/visa.jpg" alt="Visa" style={{ height: '24px' }} />
+                        <img src="/oo.jpg" alt="Mastercard" style={{ height: '24px' }} />
+                        <img src="/paypal.png" alt="Google Pay" style={{ height: '24px' }} />
+                        <img src="/ggpay.png" alt="American Express" style={{ height: '24px' }} />
+                    </Box>
                 </Box>
 
                 <Typography variant="body2">
