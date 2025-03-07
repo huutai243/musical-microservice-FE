@@ -80,7 +80,7 @@ const Header = () => {
 
                         {user ? (
                             <>
-                                <IconButton onClick={() => navigate('/profile')}>
+                                <IconButton onClick={handleMenuOpen}>
                                     <Avatar src={user.photoURL} alt={user.displayName} sx={{ width: 50, height: 50, transition: '0.3s', '&:hover': { transform: 'scale(1.1)' } }} />
                                 </IconButton>
                                 <Menu
@@ -89,6 +89,9 @@ const Header = () => {
                                     onClose={handleMenuClose}
                                     TransitionComponent={Fade}
                                 >
+                                    <MenuItem onClick={() => { navigate('/profile'); handleMenuClose(); }}>
+                                        Thông tin cá nhân
+                                    </MenuItem>
                                     <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
                                 </Menu>
                             </>
@@ -109,8 +112,7 @@ const Header = () => {
     alignItems: 'center',
     padding: '20px 0',
     boxShadow: '0px 4px 15px rgba(0,0,0,0.3)',
-    borderBottomLeftRadius: '10px',
-    borderBottomRightRadius: '10px'
+    height: '20px',
   }}
 >
   {['Trang Chủ', 'Sản Phẩm', 'Giới Thiệu', 'Khuyến Mãi', 'Liên Hệ', 'Profile'].map((item, index) => (

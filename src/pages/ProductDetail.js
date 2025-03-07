@@ -118,11 +118,9 @@ const ProductDetail = () => {
                     <Typography variant="h5" fontWeight="bold" sx={{ mb: 2, textAlign: 'center', textDecoration: 'underline', color: '#993300' }}>
                         Chi Tiết Sản Phẩm
                     </Typography>
-                    <Typography variant="body1">
-                        Blanditiis dolorem voluptatem consequuntur explicabo accusamus fugiat maxime. Eum vel fugit voluptatibus ex dolorum.
-                    </Typography>
+                    <Typography variant="h4" fontWeight="bold">{product.name}</Typography>
                     <Typography variant="h6" fontWeight="bold" sx={{ mt: 3 }}>
-                        Outstanding Features
+                        Tính Năng Nổi Bật
                     </Typography>
                     <ul>
                         <li>✅ Long-term warranty: 2 years</li>
