@@ -9,9 +9,20 @@ import logo from "../image/logo.jpg";
 
 const Header = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [productMenu, setProductMenu] = useState(null); // ✅ Trạng thái menu Sản Phẩm
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Xử lý mở menu khi click vào "Sản Phẩm"
+    const handleProductMenuOpen = (event) => {
+        setProductMenu(event.currentTarget);
+    };
+
+    // Đóng menu khi click ra ngoài
+    const handleProductMenuClose = () => {
+        setProductMenu(null);
+    };
+    const [anchorEl, setAnchorEl] = useState(null);
     const [menuOpen, setMenuOpen] = useState({
         acousticPiano: false,
         digitalPiano: false,
@@ -56,75 +67,52 @@ const Header = () => {
     return (
         <AppBar position="sticky" sx={{ backgroundColor: 'white', color: 'black', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', borderBottom: '2px solid #993300' }}>
             <Container maxWidth="xl" disableGutters>
-        <Toolbar sx={{ paddingX: '16px', minHeight: '80px' }}>
+                <Toolbar sx={{ paddingX: '16px', minHeight: '80px' }}>
 
-            {/* Logo - Căn sát trái */}
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    cursor: 'pointer', 
-                    borderRadius: '12px', 
-                    padding: '5px 10px', 
-                    transition: '0.3s', 
-                    '&:hover': { backgroundColor: '#f2f2f2' }, 
-                    flexGrow: 1, // Đẩy logo về trái tối đa
-                }} 
-                
-            >
-                <img src={logo} onClick={() => navigate('/')} alt="Logo" style={{ height: '60px', marginRight: '10px', borderRadius: '10px' }} />
-                <Typography onClick={() => navigate('/')}variant="h4" sx={{ fontWeight: 'bold', color: '#993300', transition: '0.3s' }}>
-                    Music Store
-                </Typography>
-            </Box>
+                    {/* Logo - Căn trái */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1 }}>
+                        <img src={logo} onClick={() => navigate('/')} alt="Logo" style={{ height: '50px', borderRadius: '10px' }} />
+                        <Typography onClick={() => navigate('/')} variant="h5" sx={{ fontWeight: 'bold', color: '#993300' }}>
+                            Music Store
+                        </Typography>
+                    </Box>
 
-            {/* Nhóm tìm kiếm, giỏ hàng, avatar - Căn sát phải */}
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 2, 
-                    flexShrink: 0, // Ngăn bị thu nhỏ
-                    justifyContent: 'flex-end',
-                }}
-            >
-                {/* Ô tìm kiếm - Cố định kích thước */}
-                <TextField
-                    variant="outlined"
-                    size="small"
-                    placeholder="Tìm kiếm..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    sx={{
-                        width: '250px', // Đảm bảo không bị thu nhỏ
-                        maxWidth: '100%', // Cho phép co dãn nếu cần
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '20px',
-                        '& .MuiOutlinedInput-root': { borderRadius: '20px' },
-                        '&:hover': { backgroundColor: '#e8e8e8' },
-                    }}
-                />
+                    {/* Nhóm tìm kiếm, giỏ hàng, avatar */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                        {/* Ô tìm kiếm */}
+                        <TextField
+                            variant="outlined"
+                            size="small"
+                            placeholder="Tìm kiếm..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            sx={{
+                                width: '250px',
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: '20px',
+                                '& .MuiOutlinedInput-root': { borderRadius: '20px' },
+                                '&:hover': { backgroundColor: '#e8e8e8' },
+                            }}
+                        />
+                        <Tooltip title="Tìm kiếm">
+                            <IconButton color="inherit" sx={{ color: '#993300', '&:hover': { color: '#7a2600' } }}>
+                                <SearchIcon />
+                            </IconButton>
+                        </Tooltip>
 
-                {/* Nút tìm kiếm */}
-                <Tooltip title="Tìm kiếm">
-                    <IconButton color="inherit" sx={{ color: '#993300', '&:hover': { color: '#7a2600' } }}>
-                        <SearchIcon />
-                    </IconButton>
-                </Tooltip>
+                        {/* Nút giỏ hàng */}
+                        <Tooltip title="Giỏ hàng">
+                            <IconButton color="inherit" sx={{ color: '#993300', '&:hover': { color: '#7a2600' } }}>
+                                <ShoppingCartIcon />
+                            </IconButton>
+                        </Tooltip>
 
-                {/* Nút giỏ hàng */}
-                <Tooltip title="Giỏ hàng">
-                    <IconButton color="inherit" sx={{ color: '#993300', '&:hover': { color: '#7a2600' } }}>
-                        <ShoppingCartIcon />
-                    </IconButton>
-                </Tooltip>
-
-                {/* Avatar người dùng */}
+                        {/* Avatar người dùng */}
                 {user ? (
                     <>
                         <Tooltip title="Tài khoản">
                             <IconButton onClick={handleMenuOpen}>
-                                <Avatar src={user.photoURL} alt={user.displayName} sx={{ width: 50, height: 50, transition: '0.3s', '&:hover': { transform: 'scale(1.1)' } }} />
+                                <Avatar src={user.photoURL} alt={user.displayName} sx={{ width: 40, height: 40, transition: '0.3s', '&:hover': { transform: 'scale(1.1)' } }} />
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -164,62 +152,92 @@ const Header = () => {
                     >
                         Đăng Nhập
                     </Button>
-                )}
-            </Box>
-        </Toolbar>
-    </Container>
+                        )}
+                    </Box>
+                </Toolbar>
+            </Container>
 
+            {/* Menu Điều Hướng */}
             <Box
                 sx={{
                     background: 'linear-gradient(90deg, #993300, #b35900)',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    padding: '20px 0',
-                    boxShadow: '0px 4px 15px rgba(0,0,0,0.3)',
-                    height: '20px',
+                    padding: '4px 0',
+                    boxShadow: '0px 2px 5px rgba(0,0,0,0.3)',
                 }}
-                >
-                {['Trang Chủ', 'Sản Phẩm', 'Giới Thiệu', 'Khuyến Mãi', 'Liên Hệ', 'Profile'].map((item, index) => (
-                    <Button
-                    key={index}
-                    href={`/${item.toLowerCase().replace(/ /g, '-')}`}
-                    sx={{
-                        color: 'white',
-                        fontWeight: 'bold',
-                        textTransform: 'none',
-                        mx: 2,
-                        fontSize: '1.1rem',
-                        position: 'relative',
-                        transition: 'all 0.3s ease-in-out',
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        '&:hover': {
-                        transform: 'scale(1.1)',
-                        boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
-                        backgroundColor: 'rgba(255,255,255,0.1)',
-                        },
-                        '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        width: '100%',
-                        height: '3px',
-                        backgroundColor: 'rgba(255,255,255,0.8)',
-                        bottom: '-5px',
-                        left: 0,
-                        transform: 'scaleX(0)',
-                        transformOrigin: 'right',
-                        transition: 'transform 0.3s ease-in-out',
-                        borderRadius: '2px',
-                        },
-                        '&:hover::after': {
-                        transform: 'scaleX(1)',
-                        transformOrigin: 'left',
-                        },
-                    }}
-                    >
-                    {item}
-                    </Button>
+            >
+                {[
+                    { label: 'Trang Chủ', path: '/' },
+                    { label: 'Sản Phẩm', path: '/products' },
+                    { label: 'Giới Thiệu', path: '/about' },
+                    { label: 'Khuyến Mãi', path: '/discount' },
+                    { label: 'Liên Hệ', path: '/contact' },
+                    { label: 'Profile', path: '/profile' },
+                ].map((item, index) => (
+                    item.label === 'Sản Phẩm' ? (
+                        <Box key={index} sx={{ position: 'relative' }}>
+                            <Button
+                                onClick={handleProductMenuOpen}
+                                sx={{
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    textTransform: 'none',
+                                    mx: 1,
+                                    fontSize: '0.8rem',
+                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+                                }}
+                            >
+                                Sản Phẩm <ArrowDropDownIcon sx={{ fontSize: '1rem' }} />
+                            </Button>
+
+                            {/* Menu Dropdown */}
+                            <Menu
+                                anchorEl={productMenu}
+                                open={Boolean(productMenu)}
+                                onClose={handleProductMenuClose}
+                                sx={{ '& .MuiMenu-paper': { borderRadius: '6px', padding: '4px' } }}
+                                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                                transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                            >
+                                <MenuItem onClick={() => { navigate('/products/piano'); handleProductMenuClose(); }}>
+                                    Piano
+                                </MenuItem>
+                                <MenuItem onClick={() => { navigate('/products/guitar'); handleProductMenuClose(); }}>
+                                    Guitar
+                                </MenuItem>
+                                <MenuItem onClick={() => { navigate('/products/organ'); handleProductMenuClose(); }}>
+                                    Organ & Keyboard
+                                </MenuItem>
+                                <MenuItem onClick={() => { navigate('/products/drums'); handleProductMenuClose(); }}>
+                                    Trống & Bộ Gõ
+                                </MenuItem>
+                            </Menu>
+                        </Box>
+                    ) : (
+                        <Button
+                            key={index}
+                            onClick={() => navigate(item.path)} // ✅ Chuyển hướng đến đúng trang
+                            sx={{
+                                color: 'white',
+                                fontWeight: 'bold',
+                                textTransform: 'none',
+                                mx: 1,
+                                fontSize: '0.8rem',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+                            }}
+                        >
+                            {item.label}
+                        </Button>
+                    )
                 ))}
             </Box>
         </AppBar>
