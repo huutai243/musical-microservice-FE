@@ -15,8 +15,8 @@ import {
 import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import backgroundImage from '../image/background.jpg';
+import api from '../utils/api';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -27,22 +27,19 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         if (!username || !password) {
             setError('Vui lòng nhập tên đăng nhập và mật khẩu.');
             return;
         }
-
+    
         try {
-            const response = await axios.post('http://localhost:9000/api/auth/login', {
-                username,
-                password,
-            });
-
+            const response = await api.post('/auth/login', { username, password });
+    
             localStorage.setItem('accessToken', response.data.accessToken);
             localStorage.setItem('refreshToken', response.data.refreshToken);
             localStorage.setItem('user', JSON.stringify({ username }));
-
+    
             navigate('/');
         } catch (error) {
             console.error("Lỗi đăng nhập:", error.response);

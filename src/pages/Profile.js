@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Container, Typography, Grid, Box, TextField, Button, Avatar, Paper, Divider, IconButton
+    Container, Typography, Grid, Box, TextField, Button, Avatar, Paper, Divider
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import HomeIcon from '@mui/icons-material/Home';
 import { motion } from 'framer-motion';
-import Header from '../components/Header'; // Import Header
+import HomeIcon from '@mui/icons-material/Home';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Header from '../components/Header'; 
+import api from '../utils/api'; 
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -22,16 +22,7 @@ const Profile = () => {
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
-                const accessToken = localStorage.getItem('accessToken');
-                if (!accessToken) {
-                    navigate('/login'); // Nếu không có token, chuyển về trang đăng nhập
-                    return;
-                }
-
-                const response = await axios.get('http://localhost:9000/api/users/me', {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
-
+                const response = await api.get('/users/me'); 
                 setUser(response.data);
                 setFormData({
                     fullName: response.data.fullName || '',
@@ -41,7 +32,7 @@ const Profile = () => {
                 });
             } catch (error) {
                 console.error("Lỗi lấy thông tin user:", error);
-                navigate('/login'); // Nếu lỗi (token hết hạn), chuyển về đăng nhập
+                navigate('/login'); 
             }
         };
 
@@ -55,16 +46,10 @@ const Profile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) return;
-
-            await axios.put('http://localhost:9000/api/users/me', {
+            await api.put('/users/me', { 
                 phoneNumber: formData.phoneNumber,
                 address: formData.address,
-            }, {
-                headers: { Authorization: `Bearer ${accessToken}` }
             });
-
             alert('Thông tin đã được cập nhật!');
         } catch (error) {
             console.error("Lỗi cập nhật thông tin:", error);

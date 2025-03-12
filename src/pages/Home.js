@@ -168,7 +168,7 @@ const Home = () => {
               alignItems: "center",
               textAlign: "center",
               height: "100px", // Độ cao của box
-              color: "#993300", // ✅ Đổi màu chữ thành #993300
+              color: "#993300", 
               padding: "0px",
             }}
           >
@@ -314,7 +314,7 @@ const Home = () => {
             transition: "0.3s",
             cursor: "pointer",
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            position: "relative", // ✅ Định vị tag giảm giá
+            position: "relative", 
             overflow: "hidden",
           }}
           onClick={() => handleProductClick(product.id)}
@@ -333,7 +333,7 @@ const Home = () => {
                 padding: "5px 50px",
                 fontSize: "12px",
                 fontWeight: "bold",
-                transform: "rotate(45deg) translate(50%, 80%)", // ✅ Xoay 45 độ và căn sát góc
+                transform: "rotate(45deg) translate(50%, 80%)", 
                 transformOrigin: "top right",
                 boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
               }}
