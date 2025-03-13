@@ -1,6 +1,5 @@
 import axios from 'axios';
-import jwtDecode from 'jwt-decode';
-
+import { jwtDecode } from "jwt-decode";
 const getAccessToken = () => localStorage.getItem('accessToken');
 const getRefreshToken = () => localStorage.getItem('refreshToken');
 
@@ -26,7 +25,6 @@ window.addEventListener('click', updateUserActivity);
 window.addEventListener('scroll', updateUserActivity);
 
 const isUserActive = () => (Date.now() - lastActivityTime) < 5 * 60 * 1000; // 2 phút
-g
 const refreshAccessToken = async () => {
     if (!isUserActive()) {
         console.warn('User inactive, skipping token refresh');

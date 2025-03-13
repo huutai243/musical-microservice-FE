@@ -21,6 +21,7 @@ const App = () => {
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/cart" element={<Profile />} />
                 </Routes>
         </Router>
     );
