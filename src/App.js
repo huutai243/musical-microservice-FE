@@ -8,6 +8,10 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProductDetail from './pages/ProductDetail';
 import Profile from './pages/Profile';
+import Cart from './pages/Cart';
+import Payment from './pages/Payment';
+import Contact from './pages/Contact';
+import About from './pages/About';
 
 const App = () => {
     return (
@@ -21,7 +25,10 @@ const App = () => {
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/profile" element={<Profile />} />
-                    <Route path="/cart" element={<Profile />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/payment" element={<Payment />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/about" element={<About />} />
                 </Routes>
         </Router>
     );
