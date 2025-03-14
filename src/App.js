@@ -12,6 +12,9 @@ import Cart from './pages/Cart';
 import Payment from './pages/Payment';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import AdminDashboard from './pages/AdminDashBoard';
+import Product from './pages/Product';
+import Discount from './pages/Discount';
 
 const App = () => {
     return (
@@ -29,6 +32,9 @@ const App = () => {
                     <Route path="/payment" element={<Payment />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                    <Route path="/product" element={<Product />} />
+                    <Route path="/discount" element={<Discount />} />
                 </Routes>
         </Router>
     );
