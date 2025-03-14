@@ -6,12 +6,16 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import logo from "../image/logo.jpg";
+import { useCart } from "../context/CartContext";
+import { Badge } from "@mui/material";
+
 
 const Header = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
-    const [productMenu, setProductMenu] = useState(null); // ✅ Trạng thái menu Sản Phẩm
+    const [productMenu, setProductMenu] = useState(null); 
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
+    const { cartCount } = useCart();
 
     // Xử lý mở menu khi click vào "Sản Phẩm"
     const handleProductMenuOpen = (event) => {
@@ -102,9 +106,11 @@ const Header = () => {
 
                         {/* Nút giỏ hàng */}
                         <Tooltip title="Giỏ hàng">
-                            <IconButton color="inherit" sx={{ color: '#993300', '&:hover': { color: '#7a2600' } }}>
-                                <ShoppingCartIcon />
-                            </IconButton>
+                        <IconButton onClick={() => navigate("/cart")} sx={{ color: "#993300" }}>
+                            <Badge badgeContent={cartCount} color="error">
+                            <ShoppingCartIcon />
+                            </Badge>
+                        </IconButton>
                         </Tooltip>
 
                         {/* Avatar người dùng */}
@@ -223,7 +229,7 @@ const Header = () => {
                     ) : (
                         <Button
                             key={index}
-                            onClick={() => navigate(item.path)} // ✅ Chuyển hướng đến đúng trang
+                            onClick={() => navigate(item.path)} 
                             sx={{
                                 color: 'white',
                                 fontWeight: 'bold',
