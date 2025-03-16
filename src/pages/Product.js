@@ -6,7 +6,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import StarIcon from '@mui/icons-material/Star';
-import logo from "../image/logo.jpg";
+import logo from "../image/logo.png";
 import Footer from "../components/Footer"; // Import the Footer component
 
 const products = [

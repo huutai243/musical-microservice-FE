@@ -92,84 +92,125 @@ const Home = () => {
         <Header />
 
         {/* Banner */}
-        <Container
-          maxWidth="lg"
-          style={{ marginTop: 20, textAlign: "center", position: "relative", overflow: "hidden" }}
+        <div
+          style={{
+            width: "100vw", // Full chiều ngang màn hình
+            height: 400, // Chiều cao banner (có thể điều chỉnh)
+            position: "relative",
+            overflow: "hidden",
+            marginTop: 0, // Sát lên trên cùng
+          }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
           <div
             style={{
               display: "flex",
-              transition: "transform 0.7s ease-in-out",
-              transform: `translateX(-${bannerIndex * 100}%)`,
+              width: `${banners.length * 100}vw`, // Đảm bảo tất cả banner nằm trong một hàng
+              height: "100%",
+              transition: "transform 1s ease-in-out", // Animation mượt mà
+              transform: `translateX(-${bannerIndex * 100}vw)`, // Dịch chuyển theo chiều ngang full màn hình
             }}
           >
             {banners.map((banner, index) => (
-              <Card
+              <div
                 key={index}
-                style={{ minWidth: "100%", height: 300, position: "relative", backgroundColor: "#ddd" }}
+                style={{
+                  width: "100vw", // Mỗi banner chiếm full chiều ngang
+                  height: "100%",
+                  flexShrink: 0, // Ngăn banner bị co lại
+                }}
               >
-                <CardMedia component="img" height="300" image={banner} alt="Banner" />
-              </Card>
+                <img
+                  src={banner}
+                  alt={`Banner ${index + 1}`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover", // Ảnh full banner
+                  }}
+                />
+              </div>
             ))}
           </div>
 
-          {/* <Box
-            sx={{
-              marginTop: "50px",
-              backgroundColor: "#e0e0e0",
+          {/* Nút điều hướng */}
+          {hovered && (
+            <>
+              <IconButton
+                onClick={() => setBannerIndex((bannerIndex - 1 + banners.length) % banners.length)}
+                style={{
+                  position: "absolute",
+                  left: 20, // Nằm cách mép trái một chút
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "white",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  transition: "background-color 0.3s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.8)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.5)")}
+              >
+                <ArrowBackIos />
+              </IconButton>
+              <IconButton
+                onClick={() => setBannerIndex((bannerIndex + 1) % banners.length)}
+                style={{
+                  position: "absolute",
+                  right: 20, // Nằm cách mép phải một chút
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "white",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  transition: "background-color 0.3s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.8)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.5)")}
+              >
+                <ArrowForwardIos />
+              </IconButton>
+            </>
+          )}
+
+          {/* Dấu chấm (Dots) */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 20, // Cách đáy banner 20px
+              left: "50%",
+              transform: "translateX(-50%)",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "10px",
+              gap: "10px", // Khoảng cách giữa các dấu chấm
             }}
           >
-            <IconButton sx={{ color: "black" }}>
-              <FilterListIcon />
-            </IconButton>
-            <Typography variant="body1" sx={{ fontWeight: "bold", marginRight: "20px" }}>
-              BỘ LỌC
-            </Typography>
-            <FormControl variant="outlined" sx={{ minWidth: 350, marginRight: "10px" }}>
-              <InputLabel id="price-filter-label">Lọc giá</InputLabel>
-              <Select labelId="price-filter-label" id="price-filter" label="Lọc giá">
-                <MenuItem value="">Tất cả</MenuItem>
-                <MenuItem value="low">Giá thấp đến cao</MenuItem>
-                <MenuItem value="high">Giá cao đến thấp</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" sx={{ minWidth: 350, marginRight: "10px" }}>
-              <InputLabel id="category-filter-label">Danh mục</InputLabel>
-              <Select labelId="category-filter-label" id="category-filter" label="Danh mục">
-                <MenuItem value="">Tất cả</MenuItem>
-                <MenuItem value="guitar">Guitar</MenuItem>
-                <MenuItem value="piano">Piano</MenuItem>
-                <MenuItem value="ukulele">Ukulele</MenuItem>
-                <MenuItem value="violin">Violin</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" sx={{ minWidth: 350 }}>
-              <InputLabel id="brand-filter-label">Thương hiệu</InputLabel>
-              <Select labelId="brand-filter-label" id="brand-filter" label="Thương hiệu">
-                <MenuItem value="">Tất cả</MenuItem>
-                <MenuItem value="fender">Fender</MenuItem>
-                <MenuItem value="yamaha">Yamaha</MenuItem>
-                <MenuItem value="casio">Casio</MenuItem>
-                <MenuItem value="suzuki">Suzuki</MenuItem>
-              </Select>
-            </FormControl>
-          </Box> */}
-          <Box
+            {banners.map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  backgroundColor: bannerIndex === index ? "#993300" : "rgba(255, 255, 255, 0.5)", // Màu nổi bật cho chấm đang active
+                  cursor: "pointer",
+                  transition: "background-color 0.3s ease", // Hiệu ứng chuyển màu mượt mà
+                }}
+                onClick={() => setBannerIndex(index)} // Nhấp vào dấu chấm để chuyển ảnh
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Giới thiệu */}
+        <Box
             sx={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
               alignItems: "center",
               textAlign: "center",
-              height: "100px", // Độ cao của box
-              color: "#993300", 
-              padding: "0px",
+              height: "100px",
+              color: "#993300",
+              paddingTop: "10px",
             }}
           >
             <Typography variant="h5" fontWeight="bold">
@@ -179,113 +220,6 @@ const Home = () => {
               Music Store chuyên bán các loại nhạc cụ trên toàn quốc và đặc biệt tại TPHCM
             </Typography>
           </Box>
-
-          {hovered && (
-            <>
-              <IconButton
-                onClick={() => setBannerIndex((bannerIndex - 1 + banners.length) % banners.length)}
-                style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#993300" }}
-              >
-                <ArrowBackIos />
-              </IconButton>
-              <IconButton
-                onClick={() => setBannerIndex((bannerIndex + 1) % banners.length)}
-                style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#993300" }}
-              >
-                <ArrowForwardIos />
-              </IconButton>
-            </>
-          )}
-        </Container>
-
-        {/* Danh mục sản phẩm
-        <Container maxWidth="lg" style={{ marginTop: 40, position: "relative" }}>
-          <Typography variant="h5" gutterBottom style={{ color: "#993300" }}>
-            Danh Mục Sản Phẩm
-          </Typography>
-          <Grid container spacing={4}>
-            <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card
-                style={{ transition: "0.3s", cursor: "pointer", borderRadius: "12px" }}
-                onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 8px rgba(153, 51, 0, 0.5)")}
-                onMouseOut={(e) => (e.currentTarget.style.boxShadow = "none")}
-              >
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/guitar.jpg"
-                  alt="Đàn Guitar"
-                  style={{ borderRadius: "12px 12px 0 0" }}
-                />
-                <CardContent
-                  style={{ backgroundColor: "#8B4513", color: "#fff", textAlign: "center", borderRadius: "0 0 12px 12px" }}
-                >
-                  <Typography variant="subtitle1">Đàn Guitar</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card
-                style={{ transition: "0.3s", cursor: "pointer", borderRadius: "12px" }}
-                onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 8px rgba(153, 51, 0, 0.5)")}
-                onMouseOut={(e) => (e.currentTarget.style.boxShadow = "none")}
-              >
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/Pino.jpg"
-                  alt="Đàn Piano"
-                  style={{ borderRadius: "12px 12px 0 0" }}
-                />
-                <CardContent
-                  style={{ backgroundColor: "#8B4513", color: "#fff", textAlign: "center", borderRadius: "0 0 12px 12px" }}
-                >
-                  <Typography variant="subtitle1">Đàn Piano</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card
-                style={{ transition: "0.3s", cursor: "pointer", borderRadius: "12px" }}
-                onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 8px rgba(153, 51, 0, 0.5)")}
-                onMouseOut={(e) => (e.currentTarget.style.boxShadow = "none")}
-              >
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/ukulele.jpg"
-                  alt="Đàn Ukulele"
-                  style={{ borderRadius: "12px 12px 0 0" }}
-                />
-                <CardContent
-                  style={{ backgroundColor: "#8B4513", color: "#fff", textAlign: "center", borderRadius: "0 0 12px 12px" }}
-                >
-                  <Typography variant="subtitle1">Đàn Ukulele</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={3}>
-              <Card
-                style={{ transition: "0.3s", cursor: "pointer", borderRadius: "12px" }}
-                onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 8px rgba(153, 51, 0, 0.5)")}
-                onMouseOut={(e) => (e.currentTarget.style.boxShadow = "none")}
-              >
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image="/Violin.jpg"
-                  alt="Đàn Violin"
-                  style={{ borderRadius: "12px 12px 0 0" }}
-                />
-                <CardContent
-                  style={{ backgroundColor: "#8B4513", color: "#fff", textAlign: "center", borderRadius: "0 0 12px 12px" }}
-                >
-                  <Typography variant="subtitle1">Đàn Violin</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </Container> */}
 
         {/* Sản phẩm bán chạy */}
         <Container maxWidth="lg" style={{ marginTop: 40 }}>
