@@ -29,11 +29,13 @@ const Header = () => {
     };
     const [anchorEl, setAnchorEl] = useState(null);
     
+    const { fetchCart } = useCart();
 
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser) {
             setUser(storedUser);
+            fetchCart();
         }
     }, []);
 
@@ -45,21 +47,26 @@ const Header = () => {
         setAnchorEl(null);
     };
 
-    const handleLogout = async () => {
-        try {
-            const refreshToken = localStorage.getItem('refreshToken');
-            await axios.post('http://localhost:9000/api/auth/logout', { refreshToken });
-            localStorage.clear();
-            setUser(null);
-            navigate('/');
-            handleMenuClose();
-        } catch (error) {
-            console.error('Lỗi đăng xuất:', error);
-        }
-    };
+    const { setCartItems, setCartCount } = useCart(); // Lấy hàm từ CartContext
+
+const handleLogout = async () => {
+    try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        await axios.post('http://localhost:9000/api/auth/logout', { refreshToken });
+
+        localStorage.clear();
+        setUser(null);
+        setCartItems([]); // Xóa toàn bộ sản phẩm trong giỏ hàng
+        setCartCount(0);   // Đặt lại số lượng giỏ hàng về 0
+        navigate('/');
+        handleMenuClose();
+    } catch (error) {
+        console.error('Lỗi đăng xuất:', error);
+    }
+};
 
     return (
-        <AppBar position="sticky" sx={{ backgroundColor: 'white', color: 'black', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', borderBottom: '2px solid #993300' }}>
+        <AppBar position="sticky" sx={{ backgroundColor: '#F8EDE3', color: 'black', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', borderBottom: '2px solid #993300' }}>
             <Box sx={{ width: "100%", backgroundColor: "#000", padding: "6px 0" }}>
                 <Container sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     {/* Thông tin liên hệ */}
@@ -83,7 +90,7 @@ const Header = () => {
                 <Toolbar sx={{ padding: '5px', minHeight: '80px' }}>
 
                     {/* Logo - Căn trái */}
-                    <Box sx={{ paddingLeft:'80px', display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1 }}>
+                    <Box sx={{ paddingLeft:'20px', display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1 }}>
                         <img
                             src={logo}
                             onClick={() => navigate('/')}
@@ -99,7 +106,7 @@ const Header = () => {
                             justifyContent: 'center',
                             alignItems: 'center',
                             padding: '0px 0px',
-                            px: '80px',
+                            px: '60px',
                         }}
                     >
                         {[

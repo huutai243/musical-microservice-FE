@@ -20,7 +20,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
 
 const productCategories = [1, 2, 3, 4, 5, 6, 7, 8];
-const banners = ["/banner1.jpg", "/banner2.jpg", "/banner3.jpg"];
+const banners = ["/banner1.png", "/banner2.png", "/banner3.png"];
 
 const Home = () => {
   const [startIndex, setStartIndex] = useState(0);
@@ -94,7 +94,7 @@ const Home = () => {
         {/* Banner */}
         <div
           style={{
-            width: "100vw", // Full chiều ngang màn hình
+            width: '100%', // Full chiều ngang màn hình
             height: 400, // Chiều cao banner (có thể điều chỉnh)
             position: "relative",
             overflow: "hidden",

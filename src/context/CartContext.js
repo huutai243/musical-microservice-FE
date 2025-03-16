@@ -7,52 +7,62 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
 
+  // Lấy giỏ hàng từ API
   const fetchCart = async () => {
+    try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) return;
+
+        const response = await api.get(`/cart/${user.username}`);
+        const formattedCart = response.data.map(item => ({
+            ...item,
+            price: Number(item.price) || 0,
+            quantity: Number(item.requestedQuantity) || 0,
+            imageUrl: item.imageUrl || "",
+        }));
+
+        setCartItems(formattedCart);
+        setCartCount(formattedCart.length); // Đếm số sản phẩm khác nhau
+    } catch (error) {
+        console.error("Lỗi khi lấy giỏ hàng:", error);
+    }
+};
+
+
+  // Thêm sản phẩm vào giỏ hàng
+  const addToCart = async (productId, quantityChange = 1) => {
+    try {
+        await api.post("/cart/add", null, { params: { productId, requestedQuantity: quantityChange } });
+        fetchCart(); // Cập nhật giỏ hàng sau khi thêm
+    } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
+    }
+};
+
+  // Xóa sản phẩm khỏi giỏ hàng
+  const removeFromCart = async (productId) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) return;
 
-      const response = await api.get(`/cart/${user.username}`);
-      const formattedCart = response.data.map(item => ({
-        ...item,
-        price: Number(item.price) || 0,
-        quantity: Number(item.requestedQuantity) || 0,
-        imageUrl: item.imageUrl || "",
-      }));
+      await api.delete(`/cart/remove`, { params: { userId: user.username, productId } });
 
-      setCartItems(formattedCart);
-      setCartCount(formattedCart.length);
-    } catch (error) {
-      console.error("Lỗi khi lấy giỏ hàng:", error);
-    }
-  };
-
-  const addToCart = async (productId, quantityChange = 1) => {
-    try {
-      await api.post("/cart/add", null, { params: { productId, requestedQuantity: quantityChange } });
-      fetchCart(); 
-    } catch (error) {
-      console.error("Lỗi khi thêm sản phẩm vào giỏ hàng:", error);
-    }
-  };
-
-  const removeFromCart = async (productId) => {
-    try {
-      const userId = JSON.parse(localStorage.getItem("user")).username;
-      
+      // Cập nhật lại giỏ hàng sau khi xóa
       setCartItems(prevItems => prevItems.filter(item => item.productId !== productId));
-      setCartCount(prevCount => prevCount - 1);
+      setCartCount(prevCount => Math.max(0, prevCount - 1));
 
-      await api.delete(`/cart/remove`, { params: { userId, productId } });
-
-      setTimeout(fetchCart, 500);
+      setTimeout(fetchCart, 500); // Đợi một chút rồi cập nhật lại từ server
     } catch (error) {
       console.error("Lỗi khi xóa sản phẩm:", error);
     }
   };
 
+  useEffect(() => {
+    fetchCart(); // Lấy giỏ hàng khi app khởi chạy
+  }, []);
+
   return (
-    <CartContext.Provider value={{ cartItems, cartCount, addToCart, removeFromCart, fetchCart }}>
+    <CartContext.Provider value={{ cartItems, cartCount, addToCart, removeFromCart, fetchCart, setCartItems, setCartCount }}>
       {children}
     </CartContext.Provider>
   );
