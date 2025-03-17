@@ -124,7 +124,7 @@ const Cart = () => {
                   <Typography variant="h6">Tổng cộng:</Typography>
                   <Typography variant="h6">{totalPrice.toLocaleString("vi-VN")} VND</Typography>
                 </Box>
-                <Button variant="contained" fullWidth sx={{ mt: 3 }} onClick={() => alert("Chuyển đến thanh toán")}>
+                <Button variant="contained" fullWidth sx={{ mt: 3 }} onClick={() => alert("Mua hàng")}>
                   Thanh Toán
                 </Button>
               </Paper>
