@@ -15,6 +15,13 @@ import About from './pages/About';
 import AdminDashboard from './pages/AdminDashBoard';
 import Product from './pages/Product';
 import Discount from './pages/Discount';
+import Piano from './pages/Piano';
+import Organ from './pages/Organ';
+import Drum from './pages/Drum';
+import Guitar from './pages/Guitar';
+
+
+
 
 const App = () => {
     return (
@@ -35,6 +42,10 @@ const App = () => {
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
                     <Route path="/product" element={<Product />} />
                     <Route path="/discount" element={<Discount />} />
+                    <Route path="/piano" element={<Piano />} />
+                    <Route path="/organ" element={<Organ />} />
+                    <Route path="/drum" element={<Drum />} />
+                    <Route path="/guitar" element={<Guitar />} />
                 </Routes>
         </Router>
     );

@@ -111,7 +111,7 @@ const handleLogout = async () => {
                     >
                         {[
                             { label: 'Trang Chủ', path: '/' },
-                            { label: 'Sản Phẩm', path: '/products' },
+                            { label: 'Sản Phẩm', path: '/product' },
                             { label: 'Giới Thiệu', path: '/about' },
                             { label: 'Khuyến Mãi', path: '/discount' },
                             { label: 'Liên Hệ', path: '/contact' },
@@ -146,16 +146,16 @@ const handleLogout = async () => {
                                         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                                         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
                                     >
-                                        <MenuItem onClick={() => { navigate('/products/piano'); handleProductMenuClose(); }}>
+                                        <MenuItem onClick={() => { navigate('/piano'); handleProductMenuClose(); }}>
                                             Piano
                                         </MenuItem>
-                                        <MenuItem onClick={() => { navigate('/products/guitar'); handleProductMenuClose(); }}>
+                                        <MenuItem onClick={() => { navigate('/guitar'); handleProductMenuClose(); }}>
                                             Guitar
                                         </MenuItem>
-                                        <MenuItem onClick={() => { navigate('/products/organ'); handleProductMenuClose(); }}>
+                                        <MenuItem onClick={() => { navigate('/organ'); handleProductMenuClose(); }}>
                                             Organ & Keyboard
                                         </MenuItem>
-                                        <MenuItem onClick={() => { navigate('/products/drums'); handleProductMenuClose(); }}>
+                                        <MenuItem onClick={() => { navigate('/drum'); handleProductMenuClose(); }}>
                                             Trống & Bộ Gõ
                                         </MenuItem>
                                     </Menu>
