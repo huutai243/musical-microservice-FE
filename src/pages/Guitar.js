@@ -43,7 +43,7 @@ const Guitar = () => {
       <Header />
       <Container maxWidth="lg" sx={{ marginTop: '20px' }}>
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-          Danh sách sản phẩm Piano
+          Danh sách sản phẩm Guitar
         </Typography>
 
         {loading ? (
@@ -78,7 +78,8 @@ const Guitar = () => {
                     opacity: 0, // Ẩn icons mặc định
                     transition: 'opacity 0.3s ease-in-out'
                   }}>
-                    <IconButton onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
+                    <IconButton onClick={(e) => { e.stopPropagation(); handleProductClick(product.id); }}
+
                       sx={{ color: '#993300' }}>
                       <Search />
                     </IconButton>

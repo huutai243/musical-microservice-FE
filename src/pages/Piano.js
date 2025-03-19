@@ -78,7 +78,8 @@ const Piano = () => {
                     opacity: 0, // Ẩn icons mặc định
                     transition: 'opacity 0.3s ease-in-out'
                   }}>
-                    <IconButton onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
+                    <IconButton onClick={(e) => { e.stopPropagation(); handleProductClick(product.id); }}
+
                       sx={{ color: '#993300' }}>
                       <Search />
                     </IconButton>
