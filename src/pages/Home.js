@@ -279,7 +279,7 @@ const Home = () => {
           <CardMedia
             component="img"
             height="240"
-            image={product.imageUrls[0]}
+            image={product.imageUrls}
             alt={product.name}
           />
           <Divider />
@@ -388,7 +388,7 @@ const Home = () => {
                     <CardMedia
                       component="img"
                       height="240"
-                      image={product.imageUrls[0]}
+                      image={product.imageUrls}
                       alt={product.name}
                     />
                     <Divider />
