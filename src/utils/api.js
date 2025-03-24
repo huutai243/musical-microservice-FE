@@ -12,7 +12,8 @@ const getTokenExpiration = () => {
 
   try {
     const decoded = jwtDecode(token);
-    return decoded.exp ? decoded.exp * 1000 : null; 
+    console.log(" Access Token Expiry:", new Date(decoded.exp * 1000).toLocaleTimeString());
+    return decoded.exp ? decoded.exp * 1000 : null;  
   } catch (error) {
     console.error(" Lỗi giải mã token:", error);
     return null;
@@ -45,7 +46,7 @@ const refreshAccessToken = async () => {
 
   try {
     console.log("Đang làm mới accessToken...");
-    const response = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+    const response = await axios.post(`${BASE_URL}/auth/refresh-token`, { refreshToken });
 
     if (response.data.accessToken) {
       localStorage.setItem("accessToken", response.data.accessToken);
@@ -73,7 +74,7 @@ const ensureValidAccessToken = async () => {
   const timeRemaining = expiration - now;
 
   if (timeRemaining < 2 * 60 * 1000) {
-    console.warn("⏳ Token sắp hết hạn, làm mới...");
+    console.warn(" Token sắp hết hạn, làm mới...");
     await refreshAccessToken();
   }
 };
