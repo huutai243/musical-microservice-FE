@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, Avatar, Menu, MenuItem, IconButton, Box, TextField, Container, Fade, Tooltip, Link } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Avatar, Menu, MenuItem, IconButton, Box, TextField, Container, Fade, Tooltip, Link, List, ListItem, ListItemAvatar, ListItemText, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SearchIcon from '@mui/icons-material/Search';
@@ -13,10 +13,46 @@ import PhoneIcon from "@mui/icons-material/Phone";
 
 const Header = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [showResults, setShowResults] = useState(false);
     const [productMenu, setProductMenu] = useState(null);
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = useState('');
     const { cartCount } = useCart();
+
+
+    // Gọi API tìm kiếm khi nhập từ khóa
+    useEffect(() => {
+        if (searchQuery.trim() !== '') {
+            const fetchSearchResults = async () => {
+                try {
+                    const response = await axios.get(`http://localhost:9000/api/products/search-paged?keyword=${searchQuery}&page=0&size=5`);
+                    setSearchResults(response.data.content || []); // API trả về `content`
+                    setShowResults(true);
+                } catch (error) {
+                    console.error("Lỗi khi tìm kiếm sản phẩm:", error);
+                    setSearchResults([]);
+                }
+            };
+            fetchSearchResults();
+        } else {
+            setShowResults(false);
+        }
+    }, [searchQuery]);
+
+    // Xử lý khi nhấn Enter để tìm kiếm
+    const handleSearchEnter = (event) => {
+        if (event.key === 'Enter') {
+            navigate(`/search?keyword=${searchQuery}`);
+            setShowResults(false);
+        }
+    };
+
+    // Xử lý khi chọn một sản phẩm từ kết quả tìm kiếm
+    const handleSelectProduct = (productId) => {
+        navigate(`/product/${productId}`);
+        setShowResults(false);
+    };
 
     // Xử lý mở menu khi click vào "Sản Phẩm"
     const handleProductMenuOpen = (event) => {
@@ -28,7 +64,7 @@ const Header = () => {
         setProductMenu(null);
     };
     const [anchorEl, setAnchorEl] = useState(null);
-    
+
     const { fetchCart } = useCart();
 
     useEffect(() => {
@@ -49,21 +85,21 @@ const Header = () => {
 
     const { setCartItems, setCartCount } = useCart(); // Lấy hàm từ CartContext
 
-const handleLogout = async () => {
-    try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        await axios.post('http://localhost:9000/api/auth/logout', { refreshToken });
+    const handleLogout = async () => {
+        try {
+            const refreshToken = localStorage.getItem('refreshToken');
+            await axios.post('http://localhost:9000/api/auth/logout', { refreshToken });
 
-        localStorage.clear();
-        setUser(null);
-        setCartItems([]); // Xóa toàn bộ sản phẩm trong giỏ hàng
-        setCartCount(0);   // Đặt lại số lượng giỏ hàng về 0
-        navigate('/');
-        handleMenuClose();
-    } catch (error) {
-        console.error('Lỗi đăng xuất:', error);
-    }
-};
+            localStorage.clear();
+            setUser(null);
+            setCartItems([]); // Xóa toàn bộ sản phẩm trong giỏ hàng
+            setCartCount(0);   // Đặt lại số lượng giỏ hàng về 0
+            navigate('/');
+            handleMenuClose();
+        } catch (error) {
+            console.error('Lỗi đăng xuất:', error);
+        }
+    };
 
     return (
         <AppBar position="sticky" sx={{ backgroundColor: '#F8EDE3', color: 'black', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', borderBottom: '2px solid #993300' }}>
@@ -90,14 +126,14 @@ const handleLogout = async () => {
                 <Toolbar sx={{ padding: '5px', minHeight: '80px' }}>
 
                     {/* Logo - Căn trái */}
-                    <Box sx={{ paddingLeft:'20px', display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1 }}>
+                    <Box sx={{ paddingLeft: '20px', display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1 }}>
                         <img
                             src={logo}
                             onClick={() => navigate('/')}
                             alt="Logo"
                             style={{ height: '50px', borderRadius: '10px', objectFit: 'contain' }} // Tăng kích thước logo
                         />
-                        
+
                     </Box>
                     {/* Menu Điều Hướng */}
                     <Box
@@ -185,25 +221,54 @@ const handleLogout = async () => {
                     {/* Nhóm tìm kiếm, giỏ hàng, avatar */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                         {/* Ô tìm kiếm */}
-                        <TextField
-                            variant="outlined"
-                            size="small"
-                            placeholder="Tìm kiếm..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            sx={{
-                                width: '250px',
-                                backgroundColor: '#f5f5f5',
-                                borderRadius: '20px',
-                                '& .MuiOutlinedInput-root': { borderRadius: '20px' },
-                                '&:hover': { backgroundColor: '#e8e8e8' },
-                            }}
-                        />
-                        <Tooltip title="Tìm kiếm">
-                            <IconButton color="inherit" sx={{ color: '#993300', '&:hover': { color: '#7a2600' } }}>
+                        <Box sx={{ position: "relative", width: "300px" }}>
+                            <TextField
+                                variant="outlined"
+                                size="small"
+                                placeholder="Tìm kiếm..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleSearchEnter}
+                                fullWidth
+                                sx={{
+                                    backgroundColor: "#fff",
+                                    borderRadius: "20px",
+                                    '& .MuiOutlinedInput-root': { borderRadius: "20px" },
+                                }}
+                            />
+                            <IconButton sx={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", color: "#993300" }}>
                                 <SearchIcon />
                             </IconButton>
-                        </Tooltip>
+
+                            {/* Hiển thị danh sách sản phẩm tìm kiếm */}
+                            {showResults && (
+                                <Paper sx={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10, mt: 1, boxShadow: 3 }}>
+                                    <List>
+                                        {searchResults.length > 0 ? (
+                                            searchResults.map((product) => (
+                                                <ListItem key={product.id} button onClick={() => handleSelectProduct(product.id)}>
+                                                    <ListItemAvatar>
+                                                        <img src={product.imageUrls[0]} alt={product.name} style={{ width: 50, height: 50, objectFit: "cover", borderRadius: "5px" }} />
+                                                    </ListItemAvatar>
+                                                    <ListItemText
+                                                        primary={product.name}
+                                                        secondary={
+                                                            <span style={{ color: "#993300", fontWeight: "bold" }}>
+                                                                {product.price.toLocaleString("vi-VN")} VND
+                                                            </span>
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            ))
+                                        ) : (
+                                            <ListItem>
+                                                <ListItemText primary="Không tìm thấy sản phẩm..." />
+                                            </ListItem>
+                                        )}
+                                    </List>
+                                </Paper>
+                            )}
+                        </Box>
 
                         {/* Nút giỏ hàng */}
                         <Tooltip title="Giỏ hàng">

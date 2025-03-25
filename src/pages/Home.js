@@ -202,24 +202,24 @@ const Home = () => {
 
         {/* Giới thiệu */}
         <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
-              height: "100px",
-              color: "#993300",
-              paddingTop: "10px",
-            }}
-          >
-            <Typography variant="h5" fontWeight="bold">
-              Music Store - Đại Lý Phân Phối Nhạc Cụ Uy Tín
-            </Typography>
-            <Typography variant="body1">
-              Music Store chuyên bán các loại nhạc cụ trên toàn quốc và đặc biệt tại TPHCM
-            </Typography>
-          </Box>
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            height: "100px",
+            color: "#993300",
+            paddingTop: "10px",
+          }}
+        >
+          <Typography variant="h5" fontWeight="bold">
+            Music Store - Đại Lý Phân Phối Nhạc Cụ Uy Tín
+          </Typography>
+          <Typography variant="body1">
+            Music Store chuyên bán các loại nhạc cụ trên toàn quốc và đặc biệt tại TPHCM
+          </Typography>
+        </Box>
 
         {/* Sản phẩm bán chạy */}
         <Container maxWidth="lg" style={{ marginTop: 40 }}>
@@ -237,118 +237,118 @@ const Home = () => {
             <Typography color="error">Lỗi: {error}</Typography>
           ) : (
             <Grid container spacing={4}>
-  {bestSellingProducts.map((product) => {
-    const isDiscounted = product.price < product.price * 1.2; // Kiểm tra nếu có giảm giá
+              {bestSellingProducts.map((product) => {
+                const isDiscounted = product.price < product.price * 1.2; // Kiểm tra nếu có giảm giá
 
-    return (
-      <Grid item xs={2.4} key={product.id}>
-        <Card
-          style={{
-            borderRadius: "12px",
-            transition: "0.3s",
-            cursor: "pointer",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            position: "relative", 
-            overflow: "hidden",
-          }}
-          onClick={() => handleProductClick(product.id)}
-          onMouseEnter={(e) => e.currentTarget.querySelector('.hover-icons').style.opacity = 1}
-          onMouseLeave={(e) => e.currentTarget.querySelector('.hover-icons').style.opacity = 0}
-        >
-          {/* Tag Giảm Giá (Nằm xéo ở góc trên bên phải) */}
-          {isDiscounted && (
-            <div
-              style={{
-                position: "absolute",
-                top: "0",
-                right: "0",
-                backgroundColor: "#ff3333",
-                color: "white",
-                padding: "5px 50px",
-                fontSize: "12px",
-                fontWeight: "bold",
-                transform: "rotate(45deg) translate(50%, 80%)", 
-                transformOrigin: "top right",
-                boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
-              }}
-            >
-              Sale
-            </div>
-          )}
+                return (
+                  <Grid item xs={2.4} key={product.id}>
+                    <Card
+                      style={{
+                        borderRadius: "12px",
+                        transition: "0.3s",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                        position: "relative",
+                        overflow: "hidden",
+                      }}
+                      onClick={() => handleProductClick(product.id)}
+                      onMouseEnter={(e) => e.currentTarget.querySelector('.hover-icons').style.opacity = 1}
+                      onMouseLeave={(e) => e.currentTarget.querySelector('.hover-icons').style.opacity = 0}
+                    >
+                      {/* Tag Giảm Giá (Nằm xéo ở góc trên bên phải) */}
+                      {isDiscounted && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "0",
+                            right: "0",
+                            backgroundColor: "#ff3333",
+                            color: "white",
+                            padding: "5px 50px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            transform: "rotate(45deg) translate(50%, 80%)",
+                            transformOrigin: "top right",
+                            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
+                          }}
+                        >
+                          Sale
+                        </div>
+                      )}
 
-          <CardMedia
-            component="img"
-            height="240"
-            image={product.imageUrls}
-            alt={product.name}
-          />
-          <Divider />
-          <CardContent>
-            <Typography variant="subtitle1">{product.name}</Typography>
-            <Typography variant="body1" style={{ fontWeight: "bold", color: "#993300" }}>
-              {product.price.toLocaleString("vi-VN")} VND
-            </Typography>
-            <Typography variant="body2" style={{ textDecoration: "line-through", color: "#999" }}>
-              {(product.price * 1.2).toLocaleString("vi-VN")} VND
-            </Typography>
-          </CardContent>
+                      <CardMedia
+                        component="img"
+                        height="240"
+                        image={product.imageUrls?.[0]}
+                        alt={product.name}
+                      />
+                      <Divider />
+                      <CardContent>
+                        <Typography variant="subtitle1">{product.name}</Typography>
+                        <Typography variant="body1" style={{ fontWeight: "bold", color: "#993300" }}>
+                          {product.price.toLocaleString("vi-VN")} VND
+                        </Typography>
+                        <Typography variant="body2" style={{ textDecoration: "line-through", color: "#999" }}>
+                          {(product.price * 1.2).toLocaleString("vi-VN")} VND
+                        </Typography>
+                      </CardContent>
 
-          {/* Icons Hiển Thị Khi Hover */}
-          <div className="hover-icons"
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              display: "flex",
-              gap: "10px",
-              opacity: 0,
-              transition: "opacity 0.3s ease-in-out",
-            }}
-          >
-            <Tooltip title="Thêm vào giỏ hàng">
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "white",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
-                }}
-                onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
-              >
-                <ShoppingCartIcon style={{ color: "#993300" }} />
-              </div>
-            </Tooltip>
+                      {/* Icons Hiển Thị Khi Hover */}
+                      <div className="hover-icons"
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          display: "flex",
+                          gap: "10px",
+                          opacity: 0,
+                          transition: "opacity 0.3s ease-in-out",
+                        }}
+                      >
+                        <Tooltip title="Thêm vào giỏ hàng">
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              backgroundColor: "white",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
+                            }}
+                            onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
+                          >
+                            <ShoppingCartIcon style={{ color: "#993300" }} />
+                          </div>
+                        </Tooltip>
 
-            <Tooltip title="Xem chi tiết">
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "white",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
-                }}
-                onClick={(e) => { e.stopPropagation(); handleProductClick(product.id); }}
-              >
-                <SearchIcon style={{ color: "#993300" }} />
-              </div>
-            </Tooltip>
-          </div>
-        </Card>
-      </Grid>
-    );
-  })}
-</Grid>
+                        <Tooltip title="Xem chi tiết">
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              backgroundColor: "white",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
+                            }}
+                            onClick={(e) => { e.stopPropagation(); handleProductClick(product.id); }}
+                          >
+                            <SearchIcon style={{ color: "#993300" }} />
+                          </div>
+                        </Tooltip>
+                      </div>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
 
 
           )}
@@ -388,7 +388,7 @@ const Home = () => {
                     <CardMedia
                       component="img"
                       height="240"
-                      image={product.imageUrls}
+                      image={product.imageUrls?.[0]}
                       alt={product.name}
                     />
                     <Divider />

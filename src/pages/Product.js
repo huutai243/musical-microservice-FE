@@ -8,6 +8,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import StarIcon from '@mui/icons-material/Star';
 import logo from "../image/logo.png";
 import Footer from "../components/Footer";
+import Header from "../components/Header";
 
 const Product = () => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
@@ -33,32 +34,35 @@ const Product = () => {
   }, []);
 
   return (
-    <Container maxWidth="lg" sx={{ marginTop: '20px' }}>
-      <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-        Danh sách sản phẩm
-      </Typography>
+    <div style={{ background: "linear-gradient(to right, #f0f0f0, #e0e0e0)", minHeight: "100vh" }}>
+      <Header />
+      <Container maxWidth="lg" sx={{ marginTop: '20px' }}>
+        <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+          Danh sách sản phẩm
+        </Typography>
 
-      {loading ? (
-        <Typography>Đang tải sản phẩm...</Typography>
-      ) : error ? (
-        <Typography color="error">{error}</Typography>
-      ) : (
-        <Grid container spacing={3}>
-          {products.map((product) => (
-            <Grid item xs={12} sm={6} md={3} key={product.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardMedia component="img" height="200" image={product.imageUrls[0]} alt={product.name} />
-                <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
-                  <Typography gutterBottom variant="h6">{product.name}</Typography>
-                  <Typography variant="h6" color="primary">{product.price.toLocaleString("vi-VN")} VND</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+        {loading ? (
+          <Typography>Đang tải sản phẩm...</Typography>
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
+        ) : (
+          <Grid container spacing={3}>
+            {products.map((product) => (
+              <Grid item xs={12} sm={6} md={3} key={product.id}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardMedia component="img" height="200" image={product.imageUrls[0]} alt={product.name} />
+                  <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
+                    <Typography gutterBottom variant="h6">{product.name}</Typography>
+                    <Typography variant="h6" color="primary">{product.price.toLocaleString("vi-VN")} VND</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
       <Footer />
-    </Container>
+    </div>
   );
 };
 
