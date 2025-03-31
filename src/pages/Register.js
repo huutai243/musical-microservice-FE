@@ -17,6 +17,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import backgroundImage from '../image/background.jpg'; // Import ảnh nền giống Login.js
+import api from '../utils/api';
 
 const Register = () => {
     const [username, setUsername] = useState('');
@@ -39,10 +40,7 @@ const Register = () => {
         }
 
         try {
-            const response = await axios.post(
-                'http://localhost:9000/api/auth/register',
-                { username, email, password }
-            );
+            const response = await api.post('/auth/register', { username, email, password });
 
             if (response.status === 200 && response.data.message) {
                 setOpenDialog(true);

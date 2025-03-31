@@ -9,6 +9,7 @@ import StarIcon from '@mui/icons-material/Star';
 import logo from "../image/logo.png";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import api from '../utils/api';
 
 const Product = () => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
@@ -22,7 +23,9 @@ const Product = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:9000/api/products/page?page=1&size=10");
+        const response = await api.get('/products/page', {
+          params: { page: 1, size: 10 }
+        });
         setProducts(response.data);
       } catch (error) {
         setError("Không thể tải sản phẩm");
@@ -30,6 +33,7 @@ const Product = () => {
         setLoading(false);
       }
     };
+  
     fetchProducts();
   }, []);
 

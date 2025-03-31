@@ -17,6 +17,7 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import { useNavigate } from 'react-router-dom';
 import backgroundImage from '../image/background.jpg';
 import api from '../utils/api';
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -35,11 +36,14 @@ const Login = () => {
     
         try {
             const response = await api.post('/auth/login', { username, password });
-    
+            const decoded = jwtDecode(response.data.accessToken);
             localStorage.setItem('accessToken', response.data.accessToken);
             localStorage.setItem('refreshToken', response.data.refreshToken);
-            localStorage.setItem('user', JSON.stringify({ username }));
-    
+            localStorage.setItem("user", JSON.stringify({
+                id: decoded.id,
+                username: decoded.username
+            }));
+        
             navigate('/');
         } catch (error) {
             console.error("Lỗi đăng nhập:", error.response);

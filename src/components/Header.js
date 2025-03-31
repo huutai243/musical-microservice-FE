@@ -10,6 +10,7 @@ import { useCart } from "../context/CartContext";
 import { Badge } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
+import api from '../utils/api';
 
 const Header = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
@@ -26,7 +27,13 @@ const Header = () => {
         if (searchQuery.trim() !== '') {
             const fetchSearchResults = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:9000/api/products/search-paged?keyword=${searchQuery}&page=0&size=5`);
+                    const response = await api.get(`/products/search-paged`, {
+                        params: {
+                            keyword: searchQuery,
+                            page: 0,
+                            size: 5
+                        }
+                    });
                     setSearchResults(response.data.content || []); // API trả về `content`
                     setShowResults(true);
                 } catch (error) {
@@ -88,7 +95,7 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             const refreshToken = localStorage.getItem('refreshToken');
-            await axios.post('http://localhost:9000/api/auth/logout', { refreshToken });
+            await api.post('/auth/logout', { refreshToken });
 
             localStorage.clear();
             setUser(null);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Box, Typography, Paper, CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
+import api from '../utils/api';
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
@@ -14,11 +15,10 @@ const VerifyEmail = () => {
 
     useEffect(() => {
         if (token) {
-            fetch(`http://localhost:9000/api/auth/verify-email?token=${token}`)
-                .then((res) => res.json())
-                .then((data) => {
+            api.get('/auth/verify-email', { params: { token } })
+                .then((response) => {
                     setLoading(false);
-                    if (data.message.includes("Xác thực email thành công")) {
+                    if (response.data.message.includes("Xác thực email thành công")) {
                         setMessage("Xác thực email thành công! Bạn sẽ được chuyển hướng sau:");
                         setIsSuccess(true);
                     } else {

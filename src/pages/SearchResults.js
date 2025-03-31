@@ -6,17 +6,18 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
+import api from '../utils/api';
 
 const SearchResults = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
-    
+
     const keyword = searchParams.get("keyword") || "";
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
     const size = 15;
     const [totalPages, setTotalPages] = useState(1);
@@ -25,7 +26,7 @@ const SearchResults = () => {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`http://localhost:9000/api/products/search-paged`, {
+                const response = await api.get('/products/search-paged', {
                     params: { keyword, page: page - 1, size }
                 });
 

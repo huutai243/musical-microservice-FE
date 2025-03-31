@@ -24,6 +24,7 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import { useCart } from "../context/CartContext";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import api from '../utils/api';
 
 const deliveryItems = [
   { icon: <CheckCircleIcon color="primary" fontSize="large" />, text: "Cam kết 100% chính hãng" },
@@ -49,17 +50,16 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:9000/api/products/${id}`);
-        if (!response.ok) throw new Error("Không thể tải chi tiết sản phẩm");
-        const data = await response.json();
-        setProduct(data);
-        setSelectedImage(data.imageUrls[0] || "");
+        const response = await api.get(`/products/${id}`);
+        setProduct(response.data);
+        setSelectedImage(response.data.imageUrls[0] || "");
       } catch (error) {
-        setError(error.message);
+        setError("Không thể tải chi tiết sản phẩm");
       } finally {
         setLoading(false);
       }
     };
+  
     fetchProduct();
   }, [id]);
 

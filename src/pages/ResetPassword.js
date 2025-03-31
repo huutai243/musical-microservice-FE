@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Paper, Alert } from '@mui/material';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const ResetPassword = () => {
     const [password, setPassword] = useState('');
@@ -22,7 +23,7 @@ const ResetPassword = () => {
 
         try {
             // Gọi API reset-password
-            const response = await axios.post('http://localhost:9000/api/auth/reset-password', {
+            const response = await api.post('/auth/reset-password', {
                 token: token,
                 newPassword: password,
             });

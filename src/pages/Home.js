@@ -18,6 +18,7 @@ import { ArrowBackIos, ArrowForwardIos, FilterList as FilterListIcon } from "@mu
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
+import api from '../utils/api';
 
 const productCategories = [1, 2, 3, 4, 5, 6, 7, 8];
 const banners = ["/banner1.png", "/banner2.png", "/banner3.png"];
@@ -46,33 +47,38 @@ const Home = () => {
   useEffect(() => {
     const fetchBestSellingProducts = async () => {
       try {
-        const response = await fetch("http://localhost:9000/api/products/page?page=1&size=10");
-        if (!response.ok) throw new Error("Không thể tải sản phẩm bán chạy");
-        const data = await response.json();
-        setBestSellingProducts(data);
+        const response = await api.get('/products/page', {
+          params: { page: 1, size: 10 }
+        });
+  
+        setBestSellingProducts(response.data);
         setLoadingBestSelling(false);
       } catch (error) {
         setError(error.message);
         setLoadingBestSelling(false);
       }
     };
+  
     fetchBestSellingProducts();
   }, []);
+  
 
   // Lấy dữ liệu sản phẩm mới từ API
   useEffect(() => {
     const fetchNewProducts = async () => {
       try {
-        const response = await fetch("http://localhost:9000/api/products/page?page=1&size=5");
-        if (!response.ok) throw new Error("Không thể tải sản phẩm mới");
-        const data = await response.json();
-        setNewProducts(data);
+        const response = await api.get('/products/page', {
+          params: { page: 1, size: 5 }
+        });
+  
+        setNewProducts(response.data);
         setLoadingNewProducts(false);
       } catch (error) {
         setError(error.message);
         setLoadingNewProducts(false);
       }
     };
+  
     fetchNewProducts();
   }, []);
 

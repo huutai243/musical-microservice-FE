@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Link, Paper, Modal, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import api from '../utils/api';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -11,7 +12,7 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post('http://localhost:9000/api/auth/forgot-password', { email });
+            await api.post('/auth/forgot-password', { email });
             setOpenModal(true);
             setTimeout(() => setOpenModal(false), 4000);
         } catch (error) {

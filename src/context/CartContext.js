@@ -13,7 +13,7 @@ export const CartProvider = ({ children }) => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) return;
 
-        const response = await api.get(`/cart/${user.username}`);
+        const response = await api.get(`/cart/${user.id}`);
         const formattedCart = response.data.map(item => ({
             ...item,
             price: Number(item.price) || 0,
