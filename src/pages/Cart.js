@@ -1,3 +1,4 @@
+// File: pages/Cart.js
 import React, { useEffect, useState } from "react";
 import {
   Container, Typography, Grid, Paper, Table, TableBody, TableCell,
@@ -8,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import Order from "../components/Order";
 import api from "../utils/api";
 
 const Cart = () => {
@@ -18,8 +18,6 @@ const Cart = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
-  const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -47,18 +45,12 @@ const Cart = () => {
     setSnackbarOpen(false);
   };
 
-  const [correlationId, setCorrelationId] = useState(null);
-const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-
-  
-
   const handleCheckout = async () => {
     setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user?.id) throw new Error("User not logged in");
-  
-      // Gọi API với đầy đủ headers và kiểm tra response
+
       const response = await api.post(
         "/cart/checkout",
         { userId: user.id },
@@ -70,40 +62,18 @@ const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
         }
       );
 
-      // Lưu correlationId vào localStorage và state
-    const newCorrelationId = response.data.correlationId;
-    localStorage.setItem("correlationId", newCorrelationId);
-    setCorrelationId(newCorrelationId);
-  
-      // Xử lý khi server trả về 200/201 nhưng logic thất bại
-      if (response.data?.error) {
-        throw new Error(response.data.message || "Checkout failed");
-      }
+      const correlationId = response.data.correlationId;
+      localStorage.setItem("correlationId", correlationId);
+      navigate(`/order/${correlationId}`);
 
-      // Thành công
-      setOrderData(response.data);
-      setSnackbarMessage("Checkout thành công!");
-      setSnackbarSeverity("success");
-      setOrderModalOpen(true);
-  
     } catch (error) {
       console.error("Checkout error:", error);
-      
-      // Hiển thị thông báo lỗi chi tiết từ server
-      const errorMessage = error.response?.data?.message 
-        || error.message 
-        || "Lỗi không xác định";
-      
+      const errorMessage = error.response?.data?.message || error.message || "Lỗi không xác định";
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCloseOrderModal = () => {
-    setOrderModalOpen(false);
-    fetchCart(); // Cập nhật lại giỏ hàng sau khi đóng modal
   };
 
   return (
@@ -116,9 +86,7 @@ const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
           <Box textAlign="center">
             <ShoppingCart sx={{ fontSize: 80, color: "#993300" }} />
             <Typography variant="h6" sx={{ my: 2 }}>Giỏ hàng trống!</Typography>
-            <Button variant="contained" color="primary" onClick={() => navigate("/")}>
-              Tiếp tục mua sắm
-            </Button>
+            <Button variant="contained" color="primary" onClick={() => navigate("/")}>Tiếp tục mua sắm</Button>
           </Box>
         ) : (
           <Grid container spacing={4}>
@@ -139,31 +107,19 @@ const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
                       <TableRow key={item.productId}>
                         <TableCell>
                           <Box display="flex" alignItems="center">
-                            <img
-                              src={item.imageUrl}
-                              alt={item.name}
-                              width="80"
-                              height="80"
-                              style={{ borderRadius: "8px", objectFit: "cover" }}
-                            />
+                            <img src={item.imageUrl} alt={item.name} width="80" height="80" style={{ borderRadius: "8px", objectFit: "cover" }} />
                             <Typography sx={{ ml: 2 }}>{item.name}</Typography>
                           </Box>
                         </TableCell>
                         <TableCell>{item.price.toLocaleString("vi-VN")} VND</TableCell>
                         <TableCell>
-                          <IconButton onClick={() => addToCart(item.productId, -1)} disabled={item.quantity <= 1}>
-                            <Remove />
-                          </IconButton>
+                          <IconButton onClick={() => addToCart(item.productId, -1)} disabled={item.quantity <= 1}><Remove /></IconButton>
                           {item.quantity}
-                          <IconButton onClick={() => addToCart(item.productId, 1)}>
-                            <Add />
-                          </IconButton>
+                          <IconButton onClick={() => addToCart(item.productId, 1)}><Add /></IconButton>
                         </TableCell>
                         <TableCell>{(item.price * item.quantity).toLocaleString("vi-VN")} VND</TableCell>
                         <TableCell>
-                          <IconButton onClick={() => handleRemoveItem(item.productId)} sx={{ color: "red" }}>
-                            <Delete />
-                          </IconButton>
+                          <IconButton onClick={() => handleRemoveItem(item.productId)} sx={{ color: "red" }}><Delete /></IconButton>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -208,18 +164,6 @@ const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
-      {/* Order Modal */}
-      {orderData && (
-        <Order
-          open={orderModalOpen}
-          handleClose={handleCloseOrderModal}
-          cartItems={orderData.items}
-          totalPrice={orderData.totalPrice}
-          orderStatus={orderData.status}
-          correlationId={orderData.correlationId}
-        />
-      )}
     </div>
   );
 };

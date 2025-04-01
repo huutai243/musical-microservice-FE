@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { jwtDecode } from "jwt-decode";
 import {
     Container,
     Typography,
@@ -17,7 +18,6 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import { useNavigate } from 'react-router-dom';
 import backgroundImage from '../image/background.jpg';
 import api from '../utils/api';
-import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -48,7 +48,7 @@ const Login = () => {
         } catch (error) {
             console.error("Lỗi đăng nhập:", error.response);
             setError(error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
-        }
+        }   
     };
 
     return (

@@ -20,6 +20,7 @@ import Organ from './pages/Organ';
 import Drum from './pages/Drum';
 import Guitar from './pages/Guitar';
 import SearchResults from './pages/SearchResults';
+import OrderPage from './pages/OrderPage';
 
 
 
@@ -48,9 +49,14 @@ const App = () => {
                     <Route path="/drum" element={<Drum />} />
                     <Route path="/guitar" element={<Guitar />} />
                     <Route path="/search" element={<SearchResults />} />
+                    <Route path="/order/:correlationId" element={<OrderPage />} /> 
                 </Routes>
         </Router>
     );
 };
 
 export default App;
+
+
+
+

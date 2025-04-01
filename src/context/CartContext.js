@@ -10,23 +10,29 @@ export const CartProvider = ({ children }) => {
   // Lấy giỏ hàng từ API
   const fetchCart = async () => {
     try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user) return;
-
-        const response = await api.get(`/cart/${user.id}`);
-        const formattedCart = response.data.map(item => ({
-            ...item,
-            price: Number(item.price) || 0,
-            quantity: Number(item.requestedQuantity) || 0,
-            imageUrl: item.imageUrl || "",
-        }));
-
-        setCartItems(formattedCart);
-        setCartCount(formattedCart.length); // Đếm số sản phẩm khác nhau
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return;
+  
+      const response = await api.get(`/cart/${user.id}`);
+      console.log("Dữ liệu response từ API cart:", response.data);
+  
+      // Nếu không phải mảng, gán mảng rỗng
+      const items = Array.isArray(response.data) ? response.data : [];
+  
+      const formattedCart = items.map(item => ({
+        ...item,
+        price: Number(item.price) || 0,
+        quantity: Number(item.requestedQuantity) || 0,
+        imageUrl: item.imageUrl || "",
+      }));
+  
+      setCartItems(formattedCart);
+      setCartCount(formattedCart.length);
     } catch (error) {
-        console.error("Lỗi khi lấy giỏ hàng:", error);
+      console.error("Lỗi khi lấy giỏ hàng:", error);
     }
-};
+  };
+  
 
 
   // Thêm sản phẩm vào giỏ hàng
