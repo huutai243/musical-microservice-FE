@@ -25,12 +25,18 @@ import {
   Snackbar,
   Alert,
   Chip,
+  Divider,
 } from "@mui/material";
-import { motion } from "framer-motion"; // Thêm Framer Motion để tạo animation
+import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import PaymentIcon from "@mui/icons-material/Payment";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
 const OrderPage = () => {
   const { correlationId } = useParams();
@@ -56,21 +62,44 @@ const OrderPage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Lấy thông tin đơn hàng
+  // Fetch order details
   const fetchOrderDetails = async () => {
+    console.log("[fetchOrderDetails] Bắt đầu lấy thông tin đơn hàng với correlationId:", correlationId);
     try {
       const response = await api.get(`/orders/get-by-correlation/${correlationId}`);
+      console.log("[fetchOrderDetails] Dữ liệu đơn hàng nhận được:", response.data);
       setOrder(response.data);
       if (response.data.status === "PAID") {
+        console.log("[fetchOrderDetails] Đơn hàng đã thanh toán, kích hoạt xác nhận");
         setConfirmEnabled(true);
       }
     } catch (error) {
-      console.error("Lỗi lấy thông tin đơn hàng:", error);
+      console.error("[fetchOrderDetails] Lỗi:", error);
       setSnackbarMessage("Không thể lấy thông tin đơn hàng!");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch user profile when payment modal opens
+  const fetchUserProfile = async () => {
+    console.log("[fetchUserProfile] Bắt đầu lấy thông tin người dùng");
+    try {
+      const response = await api.get("/users/me");
+      const userData = response.data;
+      console.log("[fetchUserProfile] Dữ liệu người dùng nhận được:", userData);
+      setUserInfo({
+        fullName: userData.fullName || "",
+        email: userData.email || "",
+        phone: userData.phoneNumber || "",
+      });
+    } catch (error) {
+      console.error("[fetchUserProfile] Lỗi:", error);
+      setSnackbarMessage("Không thể tải thông tin cá nhân từ hồ sơ!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -82,87 +111,96 @@ const OrderPage = () => {
     return () => clearInterval(interval);
   }, [correlationId]);
 
-  // Xử lý nhập thông tin người dùng
+  useEffect(() => {
+    if (paymentModalOpen) {
+      fetchUserProfile();
+    }
+  }, [paymentModalOpen]);
+
   const handleUserInfoChange = (e) => {
     setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
   };
 
-  // Xử lý nhập thông tin thanh toán
   const handlePaymentDetailChange = (e) => {
     setPaymentDetails({ ...paymentDetails, [e.target.name]: e.target.value });
   };
 
-  // Xử lý thanh toán
-  const handlePayment = async () => {
-    // Kiểm tra thông tin người dùng
-    if (!userInfo.fullName || !userInfo.email || !userInfo.phone) {
-      setSnackbarMessage("Vui lòng nhập đầy đủ thông tin người dùng!");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
+  // Kiểm tra xem thông tin đã đầy đủ chưa
+  const isFormValid = () => {
+    const basicInfoValid = userInfo.fullName && userInfo.email && userInfo.phone;
+    if (!paymentMethod) return false;
+
+    if (["COD", "BANK"].includes(paymentMethod)) {
+      return basicInfoValid;
     }
 
-    // Nếu chọn Online, kiểm tra thông tin thẻ
-    if (paymentMethod === "online" && (!paymentDetails.cardNumber || !paymentDetails.expiry || !paymentDetails.cvv)) {
-      setSnackbarMessage("Vui lòng nhập đầy đủ thông tin thanh toán!");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
+    if (["MOMO", "PAYPAL", "STRIPE"].includes(paymentMethod)) {
+      const cardDetailsValid = paymentDetails.cardNumber && paymentDetails.expiry && paymentDetails.cvv;
+      return basicInfoValid && cardDetailsValid;
     }
 
-    try {
-      setPaymentLoading(true);
-      const response = await api.post("/payment/checkout", {
-        orderId: order.orderId,
-        amount: order.totalPrice,
-        paymentMethod,
-        userInfo,
-        paymentDetails: paymentMethod === "online" ? paymentDetails : null,
+    return false;
+  };
+
+  // Xử lý đặt hàng với API /api/payment
+const handleOrder = async () => {
+  console.log("[handleOrder] Bắt đầu xử lý đặt hàng");
+  if (!isFormValid()) {
+    console.warn("[handleOrder] Form không hợp lệ!");
+    setSnackbarMessage("Vui lòng điền đầy đủ thông tin!");
+    setSnackbarSeverity("error");
+    setSnackbarOpen(true);
+    return;
+  }
+
+  try {
+    setPaymentLoading(true);
+    const paymentPayload = {
+      orderId: order.orderId,
+      paymentMethod: paymentMethod,
+    };
+    console.log("[handleOrder] Gửi yêu cầu thanh toán:", paymentPayload);
+
+    const paymentResponse = await api.post("/payment", paymentPayload);
+    console.log("[handleOrder] Phản hồi từ API thanh toán:", paymentResponse.data);
+
+    if (paymentResponse.data.success) {
+      console.log("[handleOrder] Thanh toán thành công, xác nhận đơn hàng");
+      const confirmResponse = await api.post("/orders/confirm", { orderId: order.orderId });
+      console.log("[handleOrder] Phản hồi xác nhận đơn hàng:", confirmResponse.data);
+
+      // Update the order status locally to "PAYMENT_SUCCESS"
+      setOrder((prevOrder) => ({
+        ...prevOrder,
+        status: "PAYMENT_SUCCESS",
+      }));
+      setConfirmEnabled(true); // Enable confirmation if needed
+
+      await api.post("/notifications/send", {
+        userId: order.userId,
+        message: `Đơn hàng #${order.orderId} đã được xác nhận!`,
       });
+      console.log("[handleOrder] Đã gửi thông báo");
 
-      if (response.data.status === "payment_completed") {
-        setConfirmEnabled(true);
-        setPaymentModalOpen(false);
-        setSnackbarMessage("Thanh toán thành công!");
-        setSnackbarSeverity("success");
-      } else {
-        throw new Error("Thanh toán thất bại!");
-      }
-    } catch (error) {
-      console.error("Thanh toán lỗi:", error);
-      setSnackbarMessage(error.response?.data?.message || "Thanh toán thất bại!");
-      setSnackbarSeverity("error");
-    } finally {
-      setPaymentLoading(false);
+      setSnackbarMessage("Đặt hàng thành công!");
+      setSnackbarSeverity("success");
       setSnackbarOpen(true);
+      setPaymentModalOpen(false); // Close the payment modal immediately
+
+      setTimeout(() => {
+        console.log("[handleOrder] Chuyển hướng đến trang cảm ơn");
+        navigate("/thank-you");
+      }, 2000);
     }
-  };
-
-  // Xử lý xác nhận đơn hàng
-  const handleConfirm = async () => {
-    try {
-      const response = await api.post("/orders/confirm", { orderId: order.orderId });
-      if (response.data.success) {
-        setSnackbarMessage("Đặt hàng thành công!");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-
-        // Gửi notification
-        await api.post("/notifications/send", {
-          userId: order.userId,
-          message: `Đơn hàng #${order.orderId} đã được xác nhận!`,
-        });
-
-        // Chuyển hướng về trang cảm ơn
-        setTimeout(() => navigate("/thank-you"), 2000);
-      }
-    } catch (error) {
-      console.error("Lỗi xác nhận đơn hàng:", error);
-      setSnackbarMessage("Không thể xác nhận đơn hàng!");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    }
-  };
+  } catch (error) {
+    console.error("[handleOrder] Lỗi:", error.response?.data || error);
+    setSnackbarMessage(error.response?.data?.message || "Đặt hàng thất bại!");
+    setSnackbarSeverity("error");
+    setSnackbarOpen(true);
+  } finally {
+    setPaymentLoading(false);
+  }
+};
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
@@ -170,12 +208,12 @@ const OrderPage = () => {
 
   if (loading) {
     return (
-      <div>
+      <div style={{ background: "linear-gradient(to right, #f0f0f0, #e0e0e0)", minHeight: "100vh" }}>
         <Header />
         <Container>
           <Box textAlign="center" sx={{ my: 5 }}>
-            <CircularProgress />
-            <Typography variant="h6" sx={{ mt: 2 }}>
+            <CircularProgress style={{ color: "#993300" }} />
+            <Typography variant="h6" sx={{ mt: 2, color: "#993300" }}>
               Đang tải thông tin đơn hàng...
             </Typography>
           </Box>
@@ -187,7 +225,7 @@ const OrderPage = () => {
 
   if (!order) {
     return (
-      <div>
+      <div style={{ background: "linear-gradient(to right, #f0f0f0, #e0e0e0)", minHeight: "100vh" }}>
         <Header />
         <Container>
           <Typography color="error" variant="h6" align="center" sx={{ my: 4 }}>
@@ -200,28 +238,28 @@ const OrderPage = () => {
   }
 
   return (
-    <div>
+    <div style={{ background: "linear-gradient(to right, #f0f0f0, #e0e0e0)", minHeight: "100vh" }}>
       <Header />
       <Container sx={{ py: 5 }}>
         <Typography
           variant="h4"
           align="center"
-          sx={{ mb: 5, fontWeight: "bold", color: "#333" }}
+          sx={{ mb: 5, fontWeight: "bold", color: "#993300" }}
         >
           Chi Tiết Đơn Hàng #{order.orderId}
         </Typography>
 
         <Grid container spacing={4}>
-          {/* Bên trái: Thông tin đơn hàng */}
+          {/* Thông tin đơn hàng */}
           <Grid item xs={12} md={8}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+              <Paper sx={{ p: 3, borderRadius: 2, boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
                 <Box display="flex" justifyContent="space-between" sx={{ mb: 3 }}>
-                  <Typography variant="h6" fontWeight="bold">
+                  <Typography variant="h6" fontWeight="bold" style={{ color: "#993300" }}>
                     Thông Tin Đơn Hàng
                   </Typography>
                   <Chip
@@ -233,20 +271,20 @@ const OrderPage = () => {
                       backgroundColor:
                         order.status === "PENDING_PAYMENT"
                           ? "#ff9800"
-                          : order.status === "PAID"
-                          ? "#4caf50"
-                          : "#f44336",
+                          : order.status === "PAID" || order.status === "PAYMENT_SUCCESS"
+                            ? "#007BFF"
+                            : "#f44336",
                       color: "#fff",
                       fontWeight: "bold",
                     }}
                   />
                 </Box>
-
+                <Divider />
                 <TableContainer>
                   <Table>
                     <TableHead>
                       <TableRow
-                        sx={{ backgroundColor: "#f5f5f5", "& th": { fontWeight: "bold" } }}
+                        sx={{ backgroundColor: "#f5f5f5", "& th": { fontWeight: "bold", color: "#993300" } }}
                       >
                         <TableCell>Sản Phẩm</TableCell>
                         <TableCell align="center">Đơn Giá</TableCell>
@@ -305,66 +343,47 @@ const OrderPage = () => {
             </motion.div>
           </Grid>
 
-          {/* Bên phải: Tùy chọn thanh toán */}
+          {/* Thanh toán */}
           <Grid item xs={12} md={4}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-                <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
+              <Paper sx={{ p: 3, borderRadius: 2, boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
+                <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#993300" }}>
                   Thanh Toán Đơn Hàng
                 </Typography>
-
-                <Box display="flex" justifyContent="space-between" sx={{ mb: 2 }}>
+                <Divider />
+                <Box display="flex" justifyContent="space-between" sx={{ my: 2 }}>
                   <Typography>Tổng tiền:</Typography>
-                  <Typography fontWeight="bold">
+                  <Typography fontWeight="bold" style={{ color: "#993300" }}>
                     {order.totalPrice.toLocaleString("vi-VN")} VND
                   </Typography>
                 </Box>
-
-                <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }}>
+                <motion.div whileHover={{ scale: order.status === "PAYMENT_SUCCESS" ? 1 : 1.02 }} transition={{ duration: 0.3 }}>
                   <Button
                     variant="outlined"
                     fullWidth
                     onClick={() => setPaymentModalOpen(true)}
-                    disabled={confirmEnabled || paymentLoading}
+                    disabled={confirmEnabled || paymentLoading || order.status === "PAYMENT_SUCCESS"} // Khóa nút khi status là PAYMENT_SUCCESS
                     sx={{
-                      py: 1.5,
-                      fontSize: "1rem",
-                      borderColor: "#4caf50",
-                      color: "#4caf50",
+                      py: 2,
+                      fontSize: "0.8rem",
+                      borderColor: order.status === "PAYMENT_SUCCESS" ? "#bdbdbd" : "#993300", // Màu viền xám khi bị khóa
+                      color: order.status === "PAYMENT_SUCCESS" ? "#bdbdbd" : "#993300", // Màu chữ xám khi bị khóa
                       "&:hover": {
-                        borderColor: "#45a049",
-                        backgroundColor: "#f0f9f0",
+                        borderColor: order.status === "PAYMENT_SUCCESS" ? "#bdbdbd" : "#993300",
+                        backgroundColor: order.status === "PAYMENT_SUCCESS" ? "transparent" : "rgba(153, 51, 0, 0.1)",
+                      },
+                      "&.Mui-disabled": {
+                        borderColor: "#bdbdbd", // Đảm bảo viền xám khi disabled
+                        color: "#bdbdbd", // Đảm bảo chữ xám khi disabled
                       },
                     }}
+                    startIcon={<PaymentIcon />}
                   >
                     Chọn Phương Thức Thanh Toán
-                  </Button>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ marginTop: "20px" }}
-                >
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={handleConfirm}
-                    disabled={!confirmEnabled}
-                    sx={{
-                      py: 1.5,
-                      fontSize: "1.1rem",
-                      backgroundColor: confirmEnabled ? "#4caf50" : "#bdbdbd",
-                      "&:hover": {
-                        backgroundColor: confirmEnabled ? "#45a049" : "#bdbdbd",
-                      },
-                    }}
-                  >
-                    Đặt Hàng
                   </Button>
                 </motion.div>
               </Paper>
@@ -376,22 +395,51 @@ const OrderPage = () => {
 
       {/* Modal Thanh Toán */}
       <Dialog open={paymentModalOpen} onClose={() => setPaymentModalOpen(false)}>
-        <DialogTitle>Chọn Phương Thức Thanh Toán</DialogTitle>
+        <DialogTitle sx={{ color: "#993300" }}>Chọn Phương Thức Thanh Toán</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2, mb: 3 }}>
-            <InputLabel>Phương thức thanh toán</InputLabel>
+            <InputLabel sx={{ color: "#993300" }}>Phương thức thanh toán</InputLabel>
             <Select
               value={paymentMethod}
               label="Phương thức thanh toán"
               onChange={(e) => setPaymentMethod(e.target.value)}
+              sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
             >
-              <MenuItem value="cod">Thanh toán khi nhận hàng</MenuItem>
-              <MenuItem value="online">Thanh toán online</MenuItem>
+              <MenuItem value="COD">
+                <Box display="flex" alignItems="center">
+                  <LocalShippingIcon sx={{ mr: 1, color: "#993300" }} />
+                  Thanh toán khi nhận hàng
+                </Box>
+              </MenuItem>
+              <MenuItem value="MOMO">
+                <Box display="flex" alignItems="center">
+                  <PaymentIcon sx={{ mr: 1, color: "#993300" }} />
+                  Thanh toán qua Momo
+                </Box>
+              </MenuItem>
+              <MenuItem value="BANK">
+                <Box display="flex" alignItems="center">
+                  <AccountBalanceIcon sx={{ mr: 1, color: "#993300" }} />
+                  Thanh toán qua Ngân hàng
+                </Box>
+              </MenuItem>
+              <MenuItem value="PAYPAL">
+                <Box display="flex" alignItems="center">
+                  <CreditCardIcon sx={{ mr: 1, color: "#993300" }} />
+                  Thanh toán qua Paypal
+                </Box>
+              </MenuItem>
+              <MenuItem value="STRIPE">
+                <Box display="flex" alignItems="center">
+                  <CreditCardIcon sx={{ mr: 1, color: "#993300" }} />
+                  Thanh toán qua Stripe
+                </Box>
+              </MenuItem>
             </Select>
           </FormControl>
 
-          {/* Form thông tin người dùng */}
-          <Typography variant="h6" sx={{ mb: 2 }}>
+          {/* Thông tin người nhận */}
+          <Typography variant="h6" sx={{ mb: 2, color: "#993300" }}>
             Thông Tin Người Nhận
           </Typography>
           <TextField
@@ -400,7 +448,7 @@ const OrderPage = () => {
             value={userInfo.fullName}
             onChange={handleUserInfoChange}
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
           />
           <TextField
             label="Email"
@@ -409,7 +457,7 @@ const OrderPage = () => {
             value={userInfo.email}
             onChange={handleUserInfoChange}
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
           />
           <TextField
             label="Số điện thoại"
@@ -417,13 +465,13 @@ const OrderPage = () => {
             value={userInfo.phone}
             onChange={handleUserInfoChange}
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
           />
 
-          {/* Form thông tin thanh toán */}
-          {paymentMethod === "online" && (
+          {/* Thông tin thanh toán */}
+          {["MOMO", "PAYPAL", "STRIPE"].includes(paymentMethod) && (
             <>
-              <Typography variant="h6" sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: "#993300" }}>
                 Thông Tin Thanh Toán
               </Typography>
               <TextField
@@ -432,7 +480,7 @@ const OrderPage = () => {
                 value={paymentDetails.cardNumber}
                 onChange={handlePaymentDetailChange}
                 fullWidth
-                sx={{ mb: 2 }}
+                sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
               />
               <TextField
                 label="Ngày hết hạn (MM/YY)"
@@ -440,37 +488,42 @@ const OrderPage = () => {
                 value={paymentDetails.expiry}
                 onChange={handlePaymentDetailChange}
                 fullWidth
-                sx={{ mb: 2 }}
+                sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
               />
               <TextField
                 label="CVV"
                 name="cvv"
-                value  = {paymentDetails.cvv}
+                value={paymentDetails.cvv}
                 onChange={handlePaymentDetailChange}
                 fullWidth
-                sx={{ mb: 2 }}
+                sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
               />
             </>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPaymentModalOpen(false)}>Hủy</Button>
-          <Button onClick={handlePayment} disabled={paymentLoading}>
-            {paymentLoading ? "Đang xử lý..." : "Xác nhận Thanh Toán"}
+          <Button onClick={() => setPaymentModalOpen(false)} sx={{ color: "#993300" }}>
+            Hủy
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleOrder}
+            disabled={!isFormValid() || paymentLoading}
+            sx={{
+              backgroundColor: isFormValid() ? "#993300" : "#bdbdbd",
+              "&:hover": { backgroundColor: isFormValid() ? "#7a2900" : "#bdbdbd" },
+              py: 1.5,
+              px: 4,
+            }}
+            startIcon={<ShoppingCartIcon />}
+          >
+            {paymentLoading ? "Đang xử lý..." : "Đặt Hàng"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: "100%" }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>

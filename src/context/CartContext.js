@@ -51,7 +51,7 @@ export const CartProvider = ({ children }) => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) return;
 
-      await api.delete(`/cart/remove`, { params: { userId: user.username, productId } });
+      await api.delete(`/cart/remove`, { params: { userId: user.id, productId } });
 
       // Cập nhật lại giỏ hàng sau khi xóa
       setCartItems(prevItems => prevItems.filter(item => item.productId !== productId));
