@@ -37,6 +37,7 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 const OrderPage = () => {
   const { correlationId } = useParams();
@@ -64,19 +65,17 @@ const OrderPage = () => {
 
   // Fetch order details
   const fetchOrderDetails = async () => {
-    console.log("[fetchOrderDetails] Bắt đầu lấy thông tin đơn hàng với correlationId:", correlationId);
     try {
       const response = await api.get(`/orders/get-by-correlation/${correlationId}`);
-      console.log("[fetchOrderDetails] Dữ liệu đơn hàng nhận được:", response.data);
       setOrder(response.data);
-      if (response.data.status === "PAID") {
-        console.log("[fetchOrderDetails] Đơn hàng đã thanh toán, kích hoạt xác nhận");
+
+      // TỰ ĐỘNG KÍCH HOẠT XÁC NHẬN NẾU ĐÃ THANH TOÁN
+      if (response.data.status === "PAYMENT_SUCCESS") {
         setConfirmEnabled(true);
+        setPaymentModalOpen(false); // Đóng modal nếu đang mở
       }
     } catch (error) {
       console.error("[fetchOrderDetails] Lỗi:", error);
-      setSnackbarMessage("Không thể lấy thông tin đơn hàng!");
-      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
       setLoading(false);
@@ -142,65 +141,41 @@ const OrderPage = () => {
     return false;
   };
 
-  // Xử lý đặt hàng với API /api/payment
-const handleOrder = async () => {
-  console.log("[handleOrder] Bắt đầu xử lý đặt hàng");
-  if (!isFormValid()) {
-    console.warn("[handleOrder] Form không hợp lệ!");
-    setSnackbarMessage("Vui lòng điền đầy đủ thông tin!");
-    setSnackbarSeverity("error");
-    setSnackbarOpen(true);
-    return;
-  }
+  // Xử lý đặt hàng với API /payment
+  const handleOrder = async () => {
+    if (!isFormValid()) {
+      setSnackbarMessage("Vui lòng điền đầy đủ thông tin!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
-  try {
-    setPaymentLoading(true);
-    const paymentPayload = {
-      orderId: order.orderId,
-      paymentMethod: paymentMethod,
-    };
-    console.log("[handleOrder] Gửi yêu cầu thanh toán:", paymentPayload);
+    try {
+      setPaymentLoading(true);
+      const paymentPayload = { orderId: order.orderId, paymentMethod };
 
-    const paymentResponse = await api.post("/payment", paymentPayload);
-    console.log("[handleOrder] Phản hồi từ API thanh toán:", paymentResponse.data);
+      // GỬI YÊU CẦU THANH TOÁN
+      await api.post("/payment", paymentPayload);
 
-    if (paymentResponse.data.success) {
-      console.log("[handleOrder] Thanh toán thành công, xác nhận đơn hàng");
-      const confirmResponse = await api.post("/orders/confirm", { orderId: order.orderId });
-      console.log("[handleOrder] Phản hồi xác nhận đơn hàng:", confirmResponse.data);
+      // ĐÓNG MODAL NGAY LẬP TỨC
+      setPaymentModalOpen(false);
 
-      // Update the order status locally to "PAYMENT_SUCCESS"
-      setOrder((prevOrder) => ({
-        ...prevOrder,
-        status: "PAYMENT_SUCCESS",
-      }));
-      setConfirmEnabled(true); // Enable confirmation if needed
+      // CẬP NHẬT DỮ LIỆU MỚI TỪ SERVER
+      await fetchOrderDetails();
 
-      await api.post("/notifications/send", {
-        userId: order.userId,
-        message: `Đơn hàng #${order.orderId} đã được xác nhận!`,
-      });
-      console.log("[handleOrder] Đã gửi thông báo");
-
-      setSnackbarMessage("Đặt hàng thành công!");
+      // HIỂN THỊ THÔNG BÁO & CHUYỂN HƯỚNG
+      setSnackbarMessage("Đặt hàng thành công! Thông tin chi tiết đã được gửi qua mail của bạn!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
-      setPaymentModalOpen(false); // Close the payment modal immediately
 
-      setTimeout(() => {
-        console.log("[handleOrder] Chuyển hướng đến trang cảm ơn");
-        navigate("/thank-you");
-      }, 2000);
+    } catch (error) {
+      setSnackbarMessage(error.response?.data?.message || "Thanh toán thất bại!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setPaymentLoading(false);
     }
-  } catch (error) {
-    console.error("[handleOrder] Lỗi:", error.response?.data || error);
-    setSnackbarMessage(error.response?.data?.message || "Đặt hàng thất bại!");
-    setSnackbarSeverity("error");
-    setSnackbarOpen(true);
-  } finally {
-    setPaymentLoading(false);
-  }
-};
+  };
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
@@ -366,24 +341,46 @@ const handleOrder = async () => {
                     variant="outlined"
                     fullWidth
                     onClick={() => setPaymentModalOpen(true)}
-                    disabled={confirmEnabled || paymentLoading || order.status === "PAYMENT_SUCCESS"} // Khóa nút khi status là PAYMENT_SUCCESS
+                    disabled={order?.status === "PAYMENT_SUCCESS" || paymentLoading}
                     sx={{
                       py: 2,
                       fontSize: "0.8rem",
-                      borderColor: order.status === "PAYMENT_SUCCESS" ? "#bdbdbd" : "#993300", // Màu viền xám khi bị khóa
-                      color: order.status === "PAYMENT_SUCCESS" ? "#bdbdbd" : "#993300", // Màu chữ xám khi bị khóa
+                      borderColor: order?.status === "PAYMENT_SUCCESS"
+                        ? "#4CAF50"  // Màu viền xanh khi thành công
+                        : "#993300", // Màu viền mặc định
+                      color: order?.status === "PAYMENT_SUCCESS"
+                        ? "#4CAF50"  // Màu chữ xanh khi thành công
+                        : "#993300", // Màu chữ mặc định
                       "&:hover": {
-                        borderColor: order.status === "PAYMENT_SUCCESS" ? "#bdbdbd" : "#993300",
-                        backgroundColor: order.status === "PAYMENT_SUCCESS" ? "transparent" : "rgba(153, 51, 0, 0.1)",
+                        borderColor: order?.status === "PAYMENT_SUCCESS"
+                          ? "#45a049" // Màu viền hover xanh đậm
+                          : "#993300",
+                        backgroundColor: order?.status === "PAYMENT_SUCCESS"
+                          ? "rgba(76, 175, 80, 0.05)" // Nền trong suốt với độ trong suốt nhẹ
+                          : "rgba(153, 51, 0, 0.1)",
                       },
                       "&.Mui-disabled": {
-                        borderColor: "#bdbdbd", // Đảm bảo viền xám khi disabled
-                        color: "#bdbdbd", // Đảm bảo chữ xám khi disabled
+                        borderColor: order?.status === "PAYMENT_SUCCESS"
+                          ? "#4CAF50" // Giữ viền xanh khi disabled nhưng đã thành công
+                          : "#bdbdbd", // Màu xám cho các trường hợp disabled khác
+                        color: order?.status === "PAYMENT_SUCCESS"
+                          ? "#4CAF50 !important" // Ưu tiên màu xanh khi đã thành công
+                          : "#bdbdbd !important",
+                        opacity: 0.9
                       },
+                      transition: "all 0.3s ease",
                     }}
-                    startIcon={<PaymentIcon />}
+                    startIcon={
+                      order?.status === "PAYMENT_SUCCESS" ? (
+                        <CheckCircleIcon sx={{ color: "#4CAF50" }} />
+                      ) : (
+                        <PaymentIcon />
+                      )
+                    }
                   >
-                    Chọn Phương Thức Thanh Toán
+                    {order?.status === "PAYMENT_SUCCESS"
+                      ? "ĐÃ THANH TOÁN THÀNH CÔNG"
+                      : "CHỌN PHƯƠNG THỨC THANH TOÁN"}
                   </Button>
                 </motion.div>
               </Paper>
@@ -394,7 +391,11 @@ const handleOrder = async () => {
       <Footer />
 
       {/* Modal Thanh Toán */}
-      <Dialog open={paymentModalOpen} onClose={() => setPaymentModalOpen(false)}>
+      <Dialog
+        open={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        key={order?.status} // Reset form khi trạng thái thay đổi
+      >
         <DialogTitle sx={{ color: "#993300" }}>Chọn Phương Thức Thanh Toán</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2, mb: 3 }}>
@@ -522,8 +523,20 @@ const handleOrder = async () => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleCloseSnackbar}>
-        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: "100%" }}>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            "& .MuiAlert-message": { fontWeight: "bold" },
+            backgroundColor: snackbarSeverity === "success" ? "#4CAF50" : "#f44336"
+          }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
