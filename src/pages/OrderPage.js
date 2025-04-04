@@ -38,6 +38,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useCart } from "../context/CartContext"; 
 
 const OrderPage = () => {
   const { correlationId } = useParams();
@@ -48,6 +49,7 @@ const OrderPage = () => {
   const [confirmEnabled, setConfirmEnabled] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const { fetchCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState("");
   const [userInfo, setUserInfo] = useState({
     fullName: "",
@@ -162,6 +164,8 @@ const OrderPage = () => {
 
       // CẬP NHẬT DỮ LIỆU MỚI TỪ SERVER
       await fetchOrderDetails();
+
+      await fetchCart();
 
       // HIỂN THỊ THÔNG BÁO & CHUYỂN HƯỚNG
       setSnackbarMessage("Đặt hàng thành công! Thông tin chi tiết đã được gửi qua mail của bạn!");
