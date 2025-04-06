@@ -109,10 +109,32 @@ const OrderPage = () => {
   };
 
   useEffect(() => {
-    fetchOrderDetails();
-    const interval = setInterval(() => {
-      fetchOrderDetails();
-    }, 4000);
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await api.get(`/orders/get-by-correlation/${correlationId}`);
+        
+        // LUÔN setOrder để hiển thị thông tin đơn hàng (kể cả lúc đang chờ PENDING_INVENTORY_VALIDATION).
+        setOrder(res.data);
+  
+        if (res.data?.status !== "PENDING_INVENTORY_VALIDATION") {
+          // Nếu đã qua PENDING_INVENTORY_VALIDATION thì dừng polling.
+          clearInterval(interval);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error("[Polling] Lỗi lấy đơn:", e);
+        if (attempts >= 10) {
+          clearInterval(interval);
+          setSnackbarMessage("Không thể xác nhận đơn hàng. Vui lòng thử lại sau.");
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+          setLoading(false);
+        }
+      }
+    }, 100);  
+  
     return () => clearInterval(interval);
   }, [correlationId]);
 
@@ -228,6 +250,13 @@ const OrderPage = () => {
         >
           Chi Tiết Đơn Hàng #{order.orderId}
         </Typography>
+
+        {order?.status === "PENDING_INVENTORY_VALIDATION" && (
+  <Alert severity="info" sx={{ mb: 3 }}>
+     Đơn hàng của bạn đang được xác nhận tồn kho. Vui lòng chờ trong giây lát...
+  </Alert>
+)}
+
 
         <Grid container spacing={4}>
           {/* Thông tin đơn hàng */}
