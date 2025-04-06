@@ -25,8 +25,10 @@ import {
   Snackbar,
   Alert,
   Chip,
+  IconButton,
   Divider,
 } from "@mui/material";
+import { Delete } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
@@ -48,9 +50,9 @@ const OrderPage = () => {
   const [confirmEnabled, setConfirmEnabled] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const { fetchCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState("");
   const [fetchingOrder, setFetchingOrder] = useState(false);
+  const { removeFromCart, fetchCart } = useCart();
 
   const [userInfo, setUserInfo] = useState({
     fullName: "",
@@ -108,33 +110,42 @@ const OrderPage = () => {
     }
   };
 
+  // useEffect(() => {
+  //   let attempts = 0;
+  //   const interval = setInterval(async () => {
+  //     attempts++;
+  //     try {
+  //       const res = await api.get(`/orders/get-by-correlation/${correlationId}`);
+
+  //       // LUÔN setOrder để hiển thị thông tin đơn hàng (kể cả lúc đang chờ PENDING_INVENTORY_VALIDATION).
+  //       setOrder(res.data);
+
+  //       if (res.data?.status !== "PENDING_INVENTORY_VALIDATION") {
+  //         // Nếu đã qua PENDING_INVENTORY_VALIDATION thì dừng polling.
+  //         clearInterval(interval);
+  //         setLoading(false);
+  //       }
+  //     } catch (e) {
+  //       console.error("[Polling] Lỗi lấy đơn:", e);
+  //       if (attempts >=10) {
+  //         clearInterval(interval);
+  //         setSnackbarMessage("Không thể xác nhận đơn hàng. Vui lòng thử lại sau.");
+  //         setSnackbarSeverity("error");
+  //         setSnackbarOpen(true);
+  //         setLoading(false);
+
+  //       }
+  //     }
+  //   }, 100);  
+
+  //   return () => clearInterval(interval);
+  // }, [correlationId]);
+
   useEffect(() => {
-    let attempts = 0;
-    const interval = setInterval(async () => {
-      attempts++;
-      try {
-        const res = await api.get(`/orders/get-by-correlation/${correlationId}`);
-        
-        // LUÔN setOrder để hiển thị thông tin đơn hàng (kể cả lúc đang chờ PENDING_INVENTORY_VALIDATION).
-        setOrder(res.data);
-  
-        if (res.data?.status !== "PENDING_INVENTORY_VALIDATION") {
-          // Nếu đã qua PENDING_INVENTORY_VALIDATION thì dừng polling.
-          clearInterval(interval);
-          setLoading(false);
-        }
-      } catch (e) {
-        console.error("[Polling] Lỗi lấy đơn:", e);
-        if (attempts >= 10) {
-          clearInterval(interval);
-          setSnackbarMessage("Không thể xác nhận đơn hàng. Vui lòng thử lại sau.");
-          setSnackbarSeverity("error");
-          setSnackbarOpen(true);
-          setLoading(false);
-        }
-      }
-    }, 100);  
-  
+    fetchOrderDetails();
+    const interval = setInterval(() => {
+      fetchOrderDetails();
+    }, 100);
     return () => clearInterval(interval);
   }, [correlationId]);
 
@@ -151,6 +162,22 @@ const OrderPage = () => {
   const handlePaymentDetailChange = (e) => {
     setPaymentDetails({ ...paymentDetails, [e.target.name]: e.target.value });
   };
+
+  const handleRemoveItem = async (productId) => {
+    try {
+      // Gọi API hoặc logic xóa sản phẩm
+      await removeFromCart(productId); // hoặc gọi API xóa item khỏi order nếu có
+      setSnackbarMessage("Sản phẩm đã được xóa!");
+      setSnackbarSeverity("success");
+      // cập nhật lại state nếu cần
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
+      setSnackbarMessage("Không thể xóa sản phẩm!");
+      setSnackbarSeverity("error");
+    }
+    setSnackbarOpen(true);
+  };
+  
 
   // Kiểm tra xem thông tin đã đầy đủ chưa
   const isFormValid = () => {
@@ -208,6 +235,32 @@ const OrderPage = () => {
     setSnackbarOpen(false);
   };
 
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "PENDING_INVENTORY_VALIDATION":
+        return "ĐANG KIỂM TRA TỒN KHO...";
+      case "PENDING_PAYMENT":
+        return "ĐANG CHỜ THANH TOÁN...";
+      case "PAYMENT_SUCCESS":
+        return "THANH TOÁN THÀNH CÔNG!";
+      default:
+        return "Không xác định";
+    }
+  };
+
+  const getItemStatusLabel = (status) => {
+    switch (status) {
+      case "PENDING":
+        return "Đang chờ xử lý";
+      case "CONFIRMED":
+        return "Đã xác nhận";
+      case "OUT_OF_STOCK":
+        return "Hết hàng";
+      default:
+        return "Không xác định";
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ background: "linear-gradient(to right, #f0f0f0, #e0e0e0)", minHeight: "100vh" }}>
@@ -252,10 +305,10 @@ const OrderPage = () => {
         </Typography>
 
         {order?.status === "PENDING_INVENTORY_VALIDATION" && (
-  <Alert severity="info" sx={{ mb: 3 }}>
-     Đơn hàng của bạn đang được xác nhận tồn kho. Vui lòng chờ trong giây lát...
-  </Alert>
-)}
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Đơn hàng của bạn đang được xác nhận tồn kho. Vui lòng chờ trong giây lát...
+          </Alert>
+        )}
 
 
         <Grid container spacing={4}>
@@ -272,7 +325,7 @@ const OrderPage = () => {
                     Thông Tin Đơn Hàng
                   </Typography>
                   <Chip
-                    label={order.status}
+                    label={getStatusLabel(order.status)}
                     sx={{
                       px: 2,
                       py: 1,
@@ -280,7 +333,7 @@ const OrderPage = () => {
                       backgroundColor:
                         order.status === "PENDING_PAYMENT"
                           ? "#ff9800"
-                          : order.status === "PAID" || order.status === "PAYMENT_SUCCESS"
+                          : order.status === "PAYMENT_SUCCESS"
                             ? "#007BFF"
                             : "#f44336",
                       color: "#fff",
@@ -333,16 +386,32 @@ const OrderPage = () => {
                             {(item.price * item.quantity).toLocaleString("vi-VN")} VND
                           </TableCell>
                           <TableCell align="center">
-                            <Chip
-                              label={item.status}
-                              sx={{
-                                backgroundColor:
-                                  item.status === "CONFIRMED" ? "#4caf50" : "#ff9800",
-                                color: "#fff",
-                                fontWeight: "bold",
-                              }}
-                            />
-                          </TableCell>
+  <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+    <Chip
+      label={getItemStatusLabel(item.status)}
+      sx={{
+        backgroundColor:
+          item.status === "CONFIRMED"
+            ? "#4caf50"
+            : item.status === "OUT_OF_STOCK"
+            ? "#f44336"
+            : "#ff9800",
+        color: "#fff",
+        fontWeight: "bold",
+      }}
+    />
+    {item.status === "OUT_OF_STOCK" && (
+      <IconButton
+        onClick={() => handleRemoveItem(item.productId)}
+        sx={{ color: "red" }}
+        size="small"
+      >
+        <Delete />
+      </IconButton>
+    )}
+  </Box>
+</TableCell>
+
                         </motion.tr>
                       ))}
                     </TableBody>
