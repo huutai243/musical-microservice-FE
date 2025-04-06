@@ -38,6 +38,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useCart } from "../context/CartContext";
 
 const OrderPage = () => {
   const { correlationId } = useParams();
@@ -156,7 +157,7 @@ const OrderPage = () => {
     }
 
     try {
-      setFetchingOrder(true);
+      setFetchingOrder(true); //Mở loading
 
       await api.post("/payment", { orderId: order.orderId, paymentMethod });
 
@@ -168,9 +169,9 @@ const OrderPage = () => {
 
       await fetchCart();
 
-      setFetchingOrder(false);
+      setFetchingOrder(false); //Đóng loading
 
-      setSnackbarMessage("Đặt hàng thành công!");
+      setSnackbarMessage("Đặt hàng thành công! Thông tin chi tiết đã được gửi vào email của bạn!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
