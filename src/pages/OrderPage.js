@@ -38,19 +38,17 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { useCart } from "../context/CartContext";
 
 const OrderPage = () => {
   const { correlationId } = useParams();
   const navigate = useNavigate();
-  const { fetchCart } = useCart();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirmEnabled, setConfirmEnabled] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const { fetchCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [fullScreenLoading, setFullScreenLoading] = useState(false);
   const [fetchingOrder, setFetchingOrder] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
@@ -167,6 +165,8 @@ const OrderPage = () => {
 
       // Gọi fetch để cập nhật trạng thái mới
       await fetchOrderDetails();
+
+      await fetchCart();
 
       setFetchingOrder(false);
 

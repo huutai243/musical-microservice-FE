@@ -14,7 +14,6 @@ export const CartProvider = ({ children }) => {
       if (!user) return;
   
       const response = await api.get(`/cart/${user.id}`);
-      console.log("Dữ liệu response từ API cart:", response.data);
   
       // Nếu không phải mảng, gán mảng rỗng
       const items = Array.isArray(response.data) ? response.data : [];
