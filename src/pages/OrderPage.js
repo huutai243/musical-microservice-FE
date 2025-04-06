@@ -38,17 +38,21 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useCart } from "../context/CartContext";
 
 const OrderPage = () => {
   const { correlationId } = useParams();
   const navigate = useNavigate();
-
+  const { fetchCart } = useCart();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirmEnabled, setConfirmEnabled] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [fullScreenLoading, setFullScreenLoading] = useState(false);
+  const [fetchingOrder, setFetchingOrder] = useState(false);
+
   const [userInfo, setUserInfo] = useState({
     fullName: "",
     email: "",
@@ -67,6 +71,7 @@ const OrderPage = () => {
   const fetchOrderDetails = async () => {
     try {
       const response = await api.get(`/orders/get-by-correlation/${correlationId}`);
+      console.log("✅ Dữ liệu order trả về:", response.data);
       setOrder(response.data);
 
       // TỰ ĐỘNG KÍCH HOẠT XÁC NHẬN NẾU ĐÃ THANH TOÁN
@@ -74,10 +79,12 @@ const OrderPage = () => {
         setConfirmEnabled(true);
         setPaymentModalOpen(false); // Đóng modal nếu đang mở
       }
+      await fetchCart();
     } catch (error) {
       console.error("[fetchOrderDetails] Lỗi:", error);
       setSnackbarOpen(true);
     } finally {
+      //setFetchingOrder(false);
       setLoading(false);
     }
   };
@@ -151,20 +158,19 @@ const OrderPage = () => {
     }
 
     try {
-      setPaymentLoading(true);
-      const paymentPayload = { orderId: order.orderId, paymentMethod };
+      setFetchingOrder(true);
 
-      // GỬI YÊU CẦU THANH TOÁN
-      await api.post("/payment", paymentPayload);
+      await api.post("/payment", { orderId: order.orderId, paymentMethod });
 
-      // ĐÓNG MODAL NGAY LẬP TỨC
-      setPaymentModalOpen(false);
+      setPaymentModalOpen(false); // đóng modal
+      //setFetchingOrder(true);
 
-      // CẬP NHẬT DỮ LIỆU MỚI TỪ SERVER
+      // Gọi fetch để cập nhật trạng thái mới
       await fetchOrderDetails();
 
-      // HIỂN THỊ THÔNG BÁO & CHUYỂN HƯỚNG
-      setSnackbarMessage("Đặt hàng thành công! Thông tin chi tiết đã được gửi qua mail của bạn!");
+      setFetchingOrder(false);
+
+      setSnackbarMessage("Đặt hàng thành công!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
@@ -172,8 +178,6 @@ const OrderPage = () => {
       setSnackbarMessage(error.response?.data?.message || "Thanh toán thất bại!");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-    } finally {
-      setPaymentLoading(false);
     }
   };
 
@@ -388,6 +392,27 @@ const OrderPage = () => {
           </Grid>
         </Grid>
       </Container>
+      {(fetchingOrder) && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <CircularProgress sx={{ color: "#fff" }} />
+          <Typography variant="h6" sx={{ ml: 2, color: "#fff" }}>
+            Đang xử lý đơn hàng...
+          </Typography>
+        </Box>
+      )}
       <Footer />
 
       {/* Modal Thanh Toán */}
