@@ -53,6 +53,8 @@ const OrderPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [fetchingOrder, setFetchingOrder] = useState(false);
   const { removeFromCart, fetchCart } = useCart();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const [userInfo, setUserInfo] = useState({
     fullName: "",
@@ -165,19 +167,79 @@ const OrderPage = () => {
 
   const handleRemoveItem = async (productId) => {
     try {
-      // Gọi API hoặc logic xóa sản phẩm
-      await removeFromCart(productId); // hoặc gọi API xóa item khỏi order nếu có
-      setSnackbarMessage("Sản phẩm đã được xóa!");
+      // Tìm item tương ứng với productId trong danh sách items của order
+      const itemToRemove = order.items.find(item => item.productId === productId);
+      if (!itemToRemove) {
+        throw new Error("Không tìm thấy sản phẩm trong đơn hàng!");
+      }
+
+      // Lấy orderId và itemId từ dữ liệu order
+      const orderId = order.orderId;
+      const itemId = itemToRemove.id;
+
+      // Gọi API xóa item khỏi order
+      await api.delete(`/orders/${orderId}/items/${itemId}`);
+
+      // Gọi API hoặc logic xóa sản phẩm khỏi giỏ hàng (nếu cần)
+      await removeFromCart(productId);
+
+      // Cập nhật lại thông tin đơn hàng sau khi xóa
+      await fetchOrderDetails();
+
+      setSnackbarMessage("Sản phẩm đã được xóa khỏi đơn hàng!");
       setSnackbarSeverity("success");
-      // cập nhật lại state nếu cần
     } catch (error) {
       console.error("Lỗi khi xóa sản phẩm:", error);
-      setSnackbarMessage("Không thể xóa sản phẩm!");
+      setSnackbarMessage(error.response?.data?.message || "Không thể xóa sản phẩm!");
       setSnackbarSeverity("error");
     }
     setSnackbarOpen(true);
   };
-  
+
+  // Hàm mở popup xác nhận
+  const handleOpenConfirmDelete = (productId) => {
+    const item = order.items.find(item => item.productId === productId);
+    if (item) {
+      setItemToDelete(item);
+      setConfirmDeleteOpen(true);
+    }
+  };
+
+  // Hàm xử lý khi người dùng xác nhận xóa
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      const orderId = order.orderId;
+      const itemId = itemToDelete.id;
+
+      // Gọi API xóa item khỏi order
+      await api.delete(`/orders/${orderId}/items/${itemId}`);
+
+      // Gọi API hoặc logic xóa sản phẩm khỏi giỏ hàng (nếu cần)
+      await removeFromCart(itemToDelete.productId);
+
+      // Cập nhật lại thông tin đơn hàng sau khi xóa
+      await fetchOrderDetails();
+
+      setSnackbarMessage("Sản phẩm đã được xóa khỏi đơn hàng!");
+      setSnackbarSeverity("success");
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
+      setSnackbarMessage(error.response?.data?.message || "Không thể xóa sản phẩm!");
+      setSnackbarSeverity("error");
+    } finally {
+      setConfirmDeleteOpen(false); // Đóng popup sau khi xử lý
+      setItemToDelete(null); // Reset item cần xóa
+      setSnackbarOpen(true);
+    }
+  };
+
+  // Hàm đóng popup mà không xóa
+  const handleCloseConfirmDelete = () => {
+    setConfirmDeleteOpen(false);
+    setItemToDelete(null);
+  };
 
   // Kiểm tra xem thông tin đã đầy đủ chưa
   const isFormValid = () => {
@@ -386,31 +448,31 @@ const OrderPage = () => {
                             {(item.price * item.quantity).toLocaleString("vi-VN")} VND
                           </TableCell>
                           <TableCell align="center">
-  <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-    <Chip
-      label={getItemStatusLabel(item.status)}
-      sx={{
-        backgroundColor:
-          item.status === "CONFIRMED"
-            ? "#4caf50"
-            : item.status === "OUT_OF_STOCK"
-            ? "#f44336"
-            : "#ff9800",
-        color: "#fff",
-        fontWeight: "bold",
-      }}
-    />
-    {item.status === "OUT_OF_STOCK" && (
-      <IconButton
-        onClick={() => handleRemoveItem(item.productId)}
-        sx={{ color: "red" }}
-        size="small"
-      >
-        <Delete />
-      </IconButton>
-    )}
-  </Box>
-</TableCell>
+                            <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                              <Chip
+                                label={getItemStatusLabel(item.status)}
+                                sx={{
+                                  backgroundColor:
+                                    item.status === "CONFIRMED"
+                                      ? "#4caf50"
+                                      : item.status === "OUT_OF_STOCK"
+                                        ? "#f44336"
+                                        : "#ff9800",
+                                  color: "#fff",
+                                  fontWeight: "bold",
+                                }}
+                              />
+                              {item.status === "OUT_OF_STOCK" && (
+                                <IconButton
+                                  onClick={() => handleOpenConfirmDelete(item.productId)}
+                                  sx={{ color: "red" }}
+                                  size="small"
+                                >
+                                  <Delete />
+                                </IconButton>
+                              )}
+                            </Box>
+                          </TableCell>
 
                         </motion.tr>
                       ))}
@@ -664,6 +726,33 @@ const OrderPage = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={handleCloseConfirmDelete}
+      >
+        <DialogTitle sx={{ color: "#993300" }}>Xác Nhận Xóa Sản Phẩm</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa sản phẩm{" "}
+            <strong>{itemToDelete?.name}</strong> khỏi đơn hàng không?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDelete} sx={{ color: "#993300" }}>
+            Không
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            sx={{
+              backgroundColor: "#993300",
+              "&:hover": { backgroundColor: "#7a2900" },
+            }}
+          >
+            Có
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
