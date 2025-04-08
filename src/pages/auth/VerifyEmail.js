@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Box, Typography, Paper, CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
-import api from '../utils/api';
+import api from '../../utils/api';
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();

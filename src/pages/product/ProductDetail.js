@@ -18,18 +18,18 @@ import {
   Pagination,
 } from "@mui/material";
 import { Add, Remove, StarBorder } from "@mui/icons-material";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import PaymentIcon from "@mui/icons-material/Payment";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api from '../../utils/api';
 
 const deliveryItems = [
   { icon: <CheckCircleIcon color="primary" fontSize="large" />, text: "Cam kết 100% chính hãng" },

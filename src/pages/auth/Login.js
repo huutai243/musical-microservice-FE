@@ -16,8 +16,8 @@ import {
 import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import { useNavigate } from 'react-router-dom';
-import backgroundImage from '../image/background.jpg';
-import api from '../utils/api';
+import backgroundImage from '../../image/background.jpg';
+import api from '../../utils/api';
 
 const Login = () => {
     const [username, setUsername] = useState('');

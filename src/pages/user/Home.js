@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Thêm useNavigate để điều hướng
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import {
   Container,
   Typography,
@@ -18,7 +18,7 @@ import { ArrowBackIos, ArrowForwardIos, FilterList as FilterListIcon } from "@mu
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
-import api from '../utils/api';
+import api from '../../utils/api';
 
 const productCategories = [1, 2, 3, 4, 5, 6, 7, 8];
 const banners = ["/banner1.png", "/banner2.png", "/banner3.png"];

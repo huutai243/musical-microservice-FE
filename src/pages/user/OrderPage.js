@@ -31,16 +31,16 @@ import {
 import { Delete } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../utils/api";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import api from "../../utils/api";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PaymentIcon from "@mui/icons-material/Payment";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 
 const OrderPage = () => {
   const { correlationId } = useParams();

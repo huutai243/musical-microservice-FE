@@ -16,8 +16,8 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import backgroundImage from '../image/background.jpg'; // Import ảnh nền giống Login.js
-import api from '../utils/api';
+import backgroundImage from '../../image/background.jpg'; // Import ảnh nền giống Login.js
+import api from '../../utils/api';
 
 const Register = () => {
     const [username, setUsername] = useState('');

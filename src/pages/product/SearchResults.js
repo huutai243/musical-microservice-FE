@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Container, Typography, Grid, Card, CardMedia, CardContent, Pagination, Divider, Tooltip, IconButton } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
-import api from '../utils/api';
+import api from '../../utils/api';
 
 const SearchResults = () => {
     const location = useLocation();

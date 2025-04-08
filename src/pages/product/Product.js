@@ -6,10 +6,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import StarIcon from '@mui/icons-material/Star';
-import logo from "../image/logo.png";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
-import api from '../utils/api';
+import logo from "../../image/logo.png";
+import Footer from "../../components/Footer";
+import Header from "../../components/Header";
+import api from '../../utils/api';
 
 const Product = () => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));

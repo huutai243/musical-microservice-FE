@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Link, Paper, Modal, CircularProgress } from '@mui/material';
 import axios from 'axios';
-import api from '../utils/api';
+import api from '../../utils/api';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');

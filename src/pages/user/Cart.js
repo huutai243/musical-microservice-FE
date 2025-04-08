@@ -6,10 +6,10 @@ import {
 } from "@mui/material";
 import { Add, Remove, Delete, ShoppingCart } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import api from "../utils/api";
+import { useCart } from "../../context/CartContext";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import api from "../../utils/api";
 
 const Cart = () => {
   const navigate = useNavigate();

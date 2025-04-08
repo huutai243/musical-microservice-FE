@@ -32,8 +32,8 @@ import {
   LocalAtm,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import { useNavigate } from "react-router-dom";
 
 const Payment = () => {

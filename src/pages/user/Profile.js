@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import Header from '../components/Header'; 
-import api from '../utils/api'; 
+import Header from '../../components/Header'; 
+import api from '../../utils/api'; 
 
 const Profile = () => {
     const [user, setUser] = useState(null);
