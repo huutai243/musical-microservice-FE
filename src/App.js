@@ -27,40 +27,47 @@ import ManageCategories from './pages/admin/ManageCategories';
 import ManageOrders from './pages/admin/ManageOrders';
 import ManageInventory from './pages/admin/ManageInventory';
 
-const App = () => {
-    return (
-        <Router>
-            <Routes>
-                {/* Các route dành cho người dùng thông thường */}
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/payment" element={<Payment />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/product" element={<Product />} />
-                <Route path="/discount" element={<Discount />} />
-                <Route path="/search" element={<SearchResults />} />
-                <Route path="/order/:correlationId" element={<OrderPage />} />
-                <Route path="/test" element={<Test />} />
+// Import ProtectedAdminRoute
+import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 
-                {/* Các route dành cho admin */}
-                <Route path="/admin" element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={<Dashboard />} />
-                <Route path="/admin/users" element={<ManageUsers />} />
-                <Route path="/admin/products" element={<ManageProducts />} />
-                <Route path="/admin/categories" element={<ManageCategories />} />
-                <Route path="/admin/orders" element={<ManageOrders />} />
-                <Route path="/admin/inventory" element={<ManageInventory />} />
-            </Routes>
-        </Router>
-    );
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        {/* Các route dành cho người dùng thông thường */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/product" element={<Product />} />
+        <Route path="/discount" element={<Discount />} />
+        <Route path="/search" element={<SearchResults />} />
+        <Route path="/order/:correlationId" element={<OrderPage />} />
+        <Route path="/test" element={<Test />} />
+
+        {/* Route dành cho admin login (không cần bảo vệ) */}
+        <Route path="/admin" element={<AdminLogin />} />
+
+        {/* Các route dành cho admin (cần bảo vệ) */}
+        <Route element={<ProtectedAdminRoute />}>
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/users" element={<ManageUsers />} />
+          <Route path="/admin/products" element={<ManageProducts />} />
+          <Route path="/admin/categories" element={<ManageCategories />} />
+          <Route path="/admin/orders" element={<ManageOrders />} />
+          <Route path="/admin/inventory" element={<ManageInventory />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
 };
 
 export default App;
