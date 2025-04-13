@@ -39,12 +39,19 @@ const Login = () => {
             const decoded = jwtDecode(response.data.accessToken);
             localStorage.setItem('accessToken', response.data.accessToken);
             localStorage.setItem('refreshToken', response.data.refreshToken);
-            localStorage.setItem("user", JSON.stringify({
-                id: decoded.id,
-                username: decoded.username
-            }));
+            // localStorage.setItem("user", JSON.stringify({
+            //     id: decoded.id,
+            //     username: decoded.username
+            // })
+        // );
         
-            navigate('/');
+        const roles = decoded.roles || [];
+
+        if (roles.includes('ADMIN')) {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/');
+        }
         } catch (error) {
             console.error("Lỗi đăng nhập:", error.response);
             setError(error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
