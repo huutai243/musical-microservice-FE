@@ -89,7 +89,7 @@ const ManageProducts = () => {
         description: editItem.description,
         price: parseFloat(editItem.price),
         categoryId: parseInt(editItem.categoryId),
-        imageUrls: editItem.imageUrls.filter(url => !url.startsWith("blob:")), // Giữ URL cũ
+        retainedImageUrls: (editItem.imageUrls || []).filter(url => !url.startsWith("blob:"))
       };
       console.log("Dữ liệu sản phẩm JSON:", productRequest);
   
