@@ -3,12 +3,8 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
 const ProtectedAdminRoute = () => {
-  // Lấy thông tin user và accessToken từ localStorage
-  const user = JSON.parse(localStorage.getItem('user'));
   const accessToken = localStorage.getItem('accessToken');
-
-  // Kiểm tra xem user và accessToken có tồn tại không
-  if (!user || !accessToken) {
+  if (!accessToken) {
     return <Navigate to="/admin" replace />;
   }
 
