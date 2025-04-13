@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box, Typography, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip, Pagination, Modal, Grid, CardMedia, Select, MenuItem, InputLabel, FormControl,
+  Box, Typography, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip, Pagination, Modal, Grid, CardMedia, Select, MenuItem, InputLabel, FormControl, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert,
 } from "@mui/material";
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 import { motion } from "framer-motion";
@@ -18,6 +18,11 @@ const ManageProducts = () => {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [newImageFiles, setNewImageFiles] = useState([]);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const size = 6;
 
   useEffect(() => {
@@ -25,14 +30,11 @@ const ManageProducts = () => {
       try {
         setLoading(true);
         const productResponse = await api.get('/products/get-all');
-        console.log("Danh sách sản phẩm:", productResponse.data);
         setProducts(productResponse.data || []);
         const categoryResponse = await api.get('/categories/get-all');
-        console.log("Danh sách danh mục:", categoryResponse.data);
         setCategories(categoryResponse.data || []);
       } catch (error) {
         setError("Không thể tải dữ liệu");
-        console.error("Lỗi khi lấy dữ liệu:", error);
       } finally {
         setLoading(false);
       }
@@ -42,85 +44,125 @@ const ManageProducts = () => {
   }, []);
 
   const handleOpenModal = (item = null) => {
-    console.log("Mở modal với sản phẩm:", item);
-    setEditItem(item);
+    if (item) {
+      // Chế độ chỉnh sửa
+      setEditItem(item);
+    } else {
+      // Chế độ thêm mới
+      setEditItem({
+        name: "",
+        description: "",
+        price: 0,
+        categoryId: "",
+        imageUrls: [],
+      });
+    }
     setNewImageFiles([]);
     setOpenModal(true);
   };
 
-  const handleDelete = (id) => {
-    console.log("Xóa sản phẩm với ID:", id);
-    setProducts(products.filter(p => p.id !== id));
+  const handleOpenConfirmDelete = (product) => {
+    setProductToDelete(product);
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleCloseConfirmDelete = () => {
+    setConfirmDeleteOpen(false);
+    setProductToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await api.delete(`/products/delete/${productToDelete.id}`);
+      setProducts(products.filter(p => p.id !== productToDelete.id));
+      setSnackbarMessage("Sản phẩm đã được xóa thành công!");
+      setSnackbarSeverity("success");
+    } catch (error) {
+      setSnackbarMessage(error.response?.data?.message || "Không thể xóa sản phẩm!");
+      setSnackbarSeverity("error");
+    } finally {
+      setConfirmDeleteOpen(false);
+      setProductToDelete(null);
+      setSnackbarOpen(true);
+    }
   };
 
   const handlePageChange = (event, value) => {
-    console.log("Chuyển trang:", value);
     setPage(value);
   };
 
   const handleImageUpload = (e, index = null) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      console.log("Tải lên hình ảnh:", file.name, "tại vị trí:", index);
-      const newImageUrls = [...(editItem.imageUrls || [])];
-      const updatedFiles = [...newImageFiles];
+    const files = Array.from(e.target.files);
+    const newUrls = files.map(file => URL.createObjectURL(file));
+    const updatedImageUrls = [...(editItem.imageUrls || [])];
+    const updatedFiles = [...newImageFiles];
 
-      if (index !== null) {
-        newImageUrls[index] = imageUrl;
-        updatedFiles[index] = file;
-      } else {
-        newImageUrls.push(imageUrl);
-        updatedFiles.push(file);
-      }
-
-      setEditItem({ ...editItem, imageUrls: newImageUrls });
-      setNewImageFiles(updatedFiles);
+    if (index !== null) {
+      // Thay thế ảnh tại vị trí index
+      updatedImageUrls[index] = newUrls[0];
+      updatedFiles[index] = files[0];
+    } else {
+      // Thêm nhiều ảnh mới
+      updatedImageUrls.push(...newUrls);
+      updatedFiles.push(...files);
     }
+
+    setEditItem({ ...editItem, imageUrls: updatedImageUrls });
+    setNewImageFiles(updatedFiles);
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      console.log("Bắt đầu lưu sản phẩm:", editItem);
-  
       const productRequest = {
         name: editItem.name,
         description: editItem.description,
         price: parseFloat(editItem.price),
         categoryId: parseInt(editItem.categoryId),
-        imageUrls: editItem.imageUrls.filter(url => !url.startsWith("blob:")), // Giữ URL cũ
+        retainedImageUrls: (editItem.imageUrls || [] ).filter(url=> !url.startsWith("blob:")),
       };
-      console.log("Dữ liệu sản phẩm JSON:", productRequest);
-  
+
       const formData = new FormData();
       formData.append("product", JSON.stringify(productRequest));
-  
-      // Thêm các tệp ảnh mới
-      newImageFiles.forEach((file, index) => {
+
+      newImageFiles.forEach((file) => {
         if (file) {
           formData.append("images", file);
-          console.log(`Hình ảnh mới ${index}:`, file.name);
         }
       });
-  
-      const response = await api.put(`/products/update/${editItem.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log("Kết quả từ API:", response.data);
-  
-      // Cập nhật state với dữ liệu từ server
-      setProducts(products.map(p => (p.id === editItem.id ? response.data : p)));
+
+      let response;
+      if (editItem.id) {
+        // Cập nhật sản phẩm
+        response = await api.put(`/products/update/${editItem.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        setProducts(products.map(p => (p.id === editItem.id ? response.data : p)));
+        setSnackbarMessage("Sản phẩm đã được cập nhật thành công!");
+      } else {
+        // Thêm sản phẩm mới
+        response = await api.post("/products/add", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        setProducts([...products, response.data]);
+        setSnackbarMessage("Sản phẩm đã được thêm thành công!");
+      }
+
       setOpenModal(false);
+      setSnackbarSeverity("success");
     } catch (error) {
-      setError("Không thể cập nhật sản phẩm");
-      console.error("Lỗi khi cập nhật sản phẩm:", error);
+      setSnackbarMessage(error.response?.data?.message || "Không thể lưu sản phẩm!");
+      setSnackbarSeverity("error");
     } finally {
       setSaving(false);
-      console.log("Hoàn tất quá trình lưu");
+      setSnackbarOpen(true);
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -137,47 +179,90 @@ const ManageProducts = () => {
 
   return (
     <AdminLayout>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-        <Box display="flex" justifyContent="space-between" mb={3}>
-          <Typography variant="h4" style={{ color: "#2c3e50" }}>Quản Lý Sản Phẩm</Typography>
-          <Box display="flex" gap={2}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        style={{ minHeight: '100vh' }}
+      >
+        {/* Tiêu đề và tìm kiếm */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" sx={{ color: '#993300', fontWeight: 'bold' }}>
+            Quản Lý Sản Phẩm
+          </Typography>
+          <Box display="flex" gap={2} alignItems="center">
             <TextField
               variant="outlined"
-              placeholder="Tìm kiếm..."
+              placeholder="Tìm kiếm sản phẩm..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{ startAdornment: <Search /> }}
+              InputProps={{
+                startAdornment: <Search sx={{ color: '#993300' }} />,
+                sx: {
+                  backgroundColor: '#fff',
+                  borderRadius: '100px',
+                  '& .MuiOutlinedInput-root': { borderRadius: '20px' },
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' },
+                },
+              }}
+              sx={{ width: '300px' }}
             />
-            <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenModal()} sx={{ backgroundColor: "#3498db" }}>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => handleOpenModal()}
+              sx={{
+                backgroundColor: '#993300',
+                color: 'white',
+                borderRadius: '25px',
+                padding: '10px 20px',
+                textTransform: 'none',
+                fontSize: '1rem',
+                '&:hover': { backgroundColor: '#b35900' },
+                transition: 'background-color 0.3s ease',
+              }}
+            >
               Thêm Sản Phẩm
             </Button>
           </Box>
         </Box>
 
+        {/* Bảng sản phẩm */}
         {loading ? (
-          <Typography>Đang tải sản phẩm...</Typography>
+          <Typography sx={{ color: '#993300', textAlign: 'center' }}>
+            Đang tải sản phẩm...
+          </Typography>
         ) : error ? (
-          <Typography color="error">{error}</Typography>
+          <Typography sx={{ color: '#993300', textAlign: 'center' }}>
+            Lỗi: {error}
+          </Typography>
         ) : (
           <>
-            <TableContainer component={Paper}>
+            <TableContainer
+              component={Paper}
+              sx={{
+                borderRadius: '12px',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+                backgroundColor: '#fff',
+              }}
+            >
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#2c3e50" }}>
-                    <TableCell sx={{ color: "#fff" }}>ID</TableCell>
-                    <TableCell sx={{ color: "#fff" }}>Hình Ảnh</TableCell>
-                    <TableCell sx={{ color: "#fff" }}>Tên</TableCell>
-                    <TableCell sx={{ color: "#fff" }}>Giá</TableCell>
-                    <TableCell sx={{ color: "#fff" }}>Danh Mục</TableCell>
-                    <TableCell sx={{ color: "#fff" }}>Hành Động</TableCell>
+                  <TableRow sx={{ backgroundColor: '#993300' }}>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Hình Ảnh</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Tên</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Giá</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Danh Mục</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Hành Động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {currentProducts.map((product) => (
                     <motion.tr
                       key={product.id}
-                      whileHover={{ backgroundColor: "#f5f5f5" }}
-                      sx={{ "&:hover": { "& td": { fontWeight: "bold" } } }}
+                      whileHover={{ backgroundColor: 'rgba(179, 89, 0, 0.1)' }}
+                      sx={{ '&:hover': { '& td': { fontWeight: 'medium' } } }}
                     >
                       <TableCell>{product.id}</TableCell>
                       <TableCell>
@@ -185,7 +270,12 @@ const ManageProducts = () => {
                           <img
                             src={product.imageUrls[0]}
                             alt={product.name}
-                            style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "4px" }}
+                            style={{
+                              width: '50px',
+                              height: '50px',
+                              objectFit: 'cover',
+                              borderRadius: '5px',
+                            }}
                           />
                         ) : (
                           "Không có hình ảnh"
@@ -196,10 +286,20 @@ const ManageProducts = () => {
                       <TableCell>{getCategoryName(product.categoryId)}</TableCell>
                       <TableCell>
                         <Tooltip title="Chỉnh sửa">
-                          <IconButton onClick={() => handleOpenModal(product)}><Edit /></IconButton>
+                          <IconButton
+                            onClick={() => handleOpenModal(product)}
+                            sx={{ color: '#993300' }}
+                          >
+                            <Edit />
+                          </IconButton>
                         </Tooltip>
                         <Tooltip title="Xóa">
-                          <IconButton onClick={() => handleDelete(product.id)} sx={{ color: "#e74c3c" }}><Delete /></IconButton>
+                          <IconButton
+                            onClick={() => handleOpenConfirmDelete(product)}
+                            sx={{ color: '#e74c3c' }}
+                          >
+                            <Delete />
+                          </IconButton>
                         </Tooltip>
                       </TableCell>
                     </motion.tr>
@@ -208,193 +308,289 @@ const ManageProducts = () => {
               </Table>
             </TableContainer>
 
+            {/* Phân trang */}
             <Pagination
               count={totalPages}
               page={page}
               onChange={handlePageChange}
               sx={{
-                display: "flex",
-                justifyContent: "center",
+                display: 'flex',
+                justifyContent: 'center',
                 mt: 4,
-                "& .MuiPaginationItem-root": { color: "#993300", borderColor: "#993300" },
-                "& .Mui-selected": { backgroundColor: "#993300 !important", color: "white !important" },
-                "& .MuiPaginationItem-root:hover": { backgroundColor: "#b35900", color: "white" },
+                '& .MuiPaginationItem-root': {
+                  color: '#993300',
+                  borderColor: '#993300',
+                },
+                '& .Mui-selected': {
+                  backgroundColor: '#993300 !important',
+                  color: 'white !important',
+                },
+                '& .MuiPaginationItem-root:hover': {
+                  backgroundColor: '#b35900',
+                  color: 'white',
+                },
               }}
             />
           </>
         )}
 
-        {/* Modal chỉnh sửa sản phẩm */}
+        {/* Modal thêm/chỉnh sửa sản phẩm */}
         <Modal
           open={openModal}
           onClose={() => setOpenModal(false)}
-          sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           <Box
             sx={{
-              backgroundColor: "#fff",
-              borderRadius: "12px",
+              backgroundColor: '#fff',
+              borderRadius: '12px',
               p: 4,
-              width: "600px",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
+              width: '600px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
             }}
           >
-            <Typography variant="h5" sx={{ mb: 2, color: "#2c3e50", fontWeight: "bold" }}>
-              {editItem ? "Chỉnh Sửa Sản Phẩm" : "Thêm Sản Phẩm"}
+            <Typography
+              variant="h5"
+              sx={{ mb: 2, color: '#993300', fontWeight: 'bold' }}
+            >
+              {editItem?.id ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm'}
             </Typography>
-            {editItem ? (
-              <Box>
+            <Box>
+              {editItem?.id && (
                 <TextField
                   label="ID"
                   value={editItem.id}
                   fullWidth
                   disabled
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 2, backgroundColor: '#f5f5f5', borderRadius: '5px' }}
                 />
-                <TextField
-                  label="Tên Sản Phẩm"
-                  defaultValue={editItem.name}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                  onChange={(e) => setEditItem({ ...editItem, name: e.target.value })} // Sửa lỗi: dùng editItem thay vì item
-                />
-                <TextField
-                  label="Mô Tả"
-                  defaultValue={editItem.description}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  sx={{ mb: 2 }}
-                  onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
-                />
-                <TextField
-                  label="Giá (VND)"
-                  defaultValue={editItem.price}
-                  fullWidth
-                  type="number"
-                  sx={{ mb: 2 }}
-                  onChange={(e) => setEditItem({ ...editItem, price: parseFloat(e.target.value) })}
-                />
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel>Danh Mục</InputLabel>
-                  <Select
-                    value={editItem.categoryId}
-                    label="Danh Mục"
-                    onChange={(e) => setEditItem({ ...editItem, categoryId: e.target.value })}
-                  >
-                    {categories.map((cat) => (
-                      <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Typography variant="h6" sx={{ mb: 1, color: "#2c3e50" }}>
-                  Hình Ảnh
-                </Typography>
-                <Grid container spacing={2} sx={{ mb: 2 }}>
-                  {editItem.imageUrls && editItem.imageUrls.length > 0 ? (
-                    editItem.imageUrls.map((url, index) => (
-                      <Grid item xs={4} key={index}>
-                        <Box
+              )}
+              <TextField
+                label="Tên Sản Phẩm"
+                value={editItem?.name || ""}
+                fullWidth
+                sx={{ mb: 2 }}
+                onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
+              />
+              <TextField
+                label="Mô Tả"
+                value={editItem?.description || ""}
+                fullWidth
+                multiline
+                rows={3}
+                sx={{ mb: 2 }}
+                onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
+              />
+              <TextField
+                label="Giá (VND)"
+                value={editItem?.price}
+                fullWidth
+                type="number"
+                sx={{ mb: 2 }}
+                onChange={(e) => setEditItem({ ...editItem, price: parseFloat(e.target.value) })}
+              />
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel sx={{ color: '#993300' }}>Danh Mục</InputLabel>
+                <Select
+                  value={editItem?.categoryId || ""}
+                  label="Danh Mục"
+                  onChange={(e) => setEditItem({ ...editItem, categoryId: e.target.value })}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#993300' },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#b35900' },
+                  }}
+                >
+                  {categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Typography variant="h6" sx={{ mb: 1, color: '#993300' }}>
+                Hình Ảnh
+              </Typography>
+              <Grid container spacing={2} sx={{ mb: 2 }}>
+                {editItem?.imageUrls?.length > 0 ? (
+                  editItem.imageUrls.map((url, index) => (
+                    <Grid item xs={4} key={index}>
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          width: '100%',
+                          height: '100px',
+                          '&:hover .edit-icon': { opacity: 1 },
+                        }}
+                      >
+                        <CardMedia
+                          component="img"
+                          image={url}
+                          alt={`Hình ảnh ${index + 1}`}
                           sx={{
-                            position: "relative",
-                            width: "100%",
-                            height: "100px",
-                            "&:hover .edit-icon": { opacity: 1 },
+                            width: '100%',
+                            height: '100px',
+                            objectFit: 'cover',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
                           }}
+                          onClick={() => document.getElementById(`replace-image-${index}`).click()}
+                        />
+                        <IconButton
+                          className="edit-icon"
+                          sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            opacity: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            color: 'white',
+                            transition: 'opacity 0.2s ease-in-out',
+                            '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+                          }}
+                          onClick={() => document.getElementById(`replace-image-${index}`).click()}
                         >
-                          <CardMedia
-                            component="img"
-                            image={url}
-                            alt={`Hình ảnh ${index + 1}`}
-                            sx={{
-                              width: "100%",
-                              height: "100px",
-                              objectFit: "cover",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => document.getElementById(`replace-image-${index}`).click()}
-                          />
-                          <IconButton
-                            className="edit-icon"
-                            sx={{
-                              position: "absolute",
-                              top: "50%",
-                              left: "50%",
-                              transform: "translate(-50%, -50%)",
-                              opacity: 0,
-                              backgroundColor: "rgba(0, 0, 0, 0.5)",
-                              color: "white",
-                              transition: "opacity 0.2s ease-in-out",
-                              "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.7)" },
-                            }}
-                            onClick={() => document.getElementById(`replace-image-${index}`).click()}
-                          >
-                            <Edit />
-                          </IconButton>
-                          <input
-                            type="file"
-                            id={`replace-image-${index}`}
-                            style={{ display: "none" }}
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(e, index)}
-                          />
-                        </Box>
-                      </Grid>
-                    ))
-                  ) : (
-                    <Typography>Không có hình ảnh</Typography>
-                  )}
-                  <Grid item xs={4}>
-                    <Box
-                      sx={{
-                        width: "100%",
-                        height: "100px",
-                        border: "2px dashed #ccc",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        borderRadius: "4px",
-                      }}
-                      onClick={() => document.getElementById("add-image").click()}
-                    >
-                      <Add sx={{ fontSize: 40, color: "#3498db" }} />
-                    </Box>
-                    <input
-                      type="file"
-                      id="add-image"
-                      style={{ display: "none" }}
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e)}
-                    />
-                  </Grid>
+                          <Edit />
+                        </IconButton>
+                        <input
+                          type="file"
+                          id={`replace-image-${index}`}
+                          style={{ display: 'none' }}
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, index)}
+                        />
+                      </Box>
+                    </Grid>
+                  ))
+                ) : (
+                  <Typography sx={{ color: '#993300' }}>Không có hình ảnh</Typography>
+                )}
+                <Grid item xs={4}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100px',
+                      border: '2px dashed #993300',
+                      borderRadius: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'rgba(179, 89, 0, 0.1)' },
+                    }}
+                    onClick={() => document.getElementById('add-image').click()}
+                  >
+                    <Add sx={{ fontSize: 40, color: '#993300' }} />
+                  </Box>
+                  <input
+                    type="file"
+                    id="add-image"
+                    multiple
+                    style={{ display: 'none' }}
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e)}
+                  />
                 </Grid>
-                <Box display="flex" justifyContent="flex-end" gap={2}>
-                  <Button
-                    variant="contained"
-                    onClick={handleSave}
-                    sx={{ backgroundColor: "#3498db" }}
-                    disabled={saving}
-                  >
-                    {saving ? "Đang lưu..." : "Lưu"}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={() => setOpenModal(false)}
-                    sx={{ borderColor: "#e74c3c", color: "#e74c3c" }}
-                  >
-                    Hủy
-                  </Button>
-                </Box>
+              </Grid>
+              <Box display="flex" justifyContent="flex-end" gap={2}>
+                <Button
+                  variant="contained"
+                  onClick={handleSave}
+                  disabled={saving}
+                  sx={{
+                    backgroundColor: '#993300',
+                    color: 'white',
+                    borderRadius: '25px',
+                    padding: '10px 20px',
+                    '&:hover': { backgroundColor: '#b35900' },
+                    transition: 'background-color 0.3s ease',
+                  }}
+                >
+                  {saving ? 'Đang lưu...' : 'Lưu'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setOpenModal(false)}
+                  sx={{
+                    borderColor: '#993300',
+                    color: '#993300',
+                    borderRadius: '25px',
+                    padding: '10px 20px',
+                    '&:hover': { backgroundColor: 'rgba(179, 89, 0, 0.1)' },
+                    transition: 'background-color 0.3s ease',
+                  }}
+                >
+                  Hủy
+                </Button>
               </Box>
-            ) : (
-              <Typography>Chức năng thêm sản phẩm chưa được triển khai</Typography>
-            )}
+            </Box>
           </Box>
         </Modal>
+
+        {/* Dialog xác nhận xóa */}
+        <Dialog
+          open={confirmDeleteOpen}
+          onClose={handleCloseConfirmDelete}
+          sx={{ '& .MuiDialog-paper': { borderRadius: '12px' } }}
+        >
+          <DialogTitle sx={{ color: '#993300', fontWeight: 'bold' }}>
+            Xác Nhận Xóa Sản Phẩm
+          </DialogTitle>
+          <DialogContent>
+            <Typography sx={{ color: '#333' }}>
+              Bạn có chắc chắn muốn xóa sản phẩm{" "}
+              <strong>{productToDelete?.name}</strong> không?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleCloseConfirmDelete}
+              sx={{
+                color: '#993300',
+                textTransform: 'none',
+                '&:hover': { backgroundColor: 'rgba(179, 89, 0, 0.1)' },
+              }}
+            >
+              Không
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              variant="contained"
+              sx={{
+                backgroundColor: '#993300',
+                color: 'white',
+                borderRadius: '25px',
+                textTransform: 'none',
+                '&:hover': { backgroundColor: '#b35900' },
+                transition: 'background-color 0.3s ease',
+              }}
+            >
+              Có
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar thông báo */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={4000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert
+            severity={snackbarSeverity}
+            sx={{
+              width: '100%',
+              '& .MuiAlert-message': { fontWeight: 'bold' },
+              backgroundColor: snackbarSeverity === 'success' ? '#993300' : '#e74c3c',
+              color: 'white',
+            }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </motion.div>
     </AdminLayout>
   );

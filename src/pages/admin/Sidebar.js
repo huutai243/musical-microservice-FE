@@ -1,7 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
-  Drawer, Box, Typography, IconButton, Divider, List, ListItem, ListItemIcon, ListItemText,
-  Modal, Paper, MenuItem,
+  Drawer, Box, Typography, IconButton, Divider, List, ListItem, ListItemIcon, ListItemText, Modal, Paper, MenuItem,
 } from "@mui/material";
 import { Dashboard as DashboardIcon, Store, Category, ShoppingCart, Inventory, People, ArrowForwardIos, ArrowBackIos, Settings as SettingsIcon } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -11,7 +10,6 @@ import api from '../../utils/api';
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const navigate = useNavigate();
-  const settingsRef = useRef(null); // Ref để lấy vị trí của menu item "Cài đặt"
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -30,6 +28,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     closed: { opacity: 0, x: -20, transition: { duration: 0.2 } },
   };
 
+  const modalVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: 20, transition: { duration: 0.2 } },
+  };
+
   const menuItems = [
     { text: "Tổng Quan", icon: <DashboardIcon />, path: "/admin/dashboard" },
     { text: "Sản Phẩm", icon: <Store />, path: "/admin/products" },
@@ -39,32 +43,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { text: "Người Dùng", icon: <People />, path: "/admin/users" },
   ];
 
-  // Thêm menu item "Cài đặt"
   const settingsItem = { text: "Cài đặt", icon: <SettingsIcon />, action: () => setSettingsModalOpen(true) };
 
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       await api.post('/auth/logout', { refreshToken });
-
       localStorage.clear();
-      navigate('/admin'); // Điều hướng về trang đăng nhập sau khi đăng xuất
-      setSettingsModalOpen(false); // Đóng modal
+      navigate('/admin');
+      setSettingsModalOpen(false);
     } catch (error) {
       console.error('Lỗi đăng xuất:', error);
     }
-  };
-
-  // Lấy vị trí của menu item "Cài đặt" để đặt modal
-  const getModalPosition = () => {
-    if (settingsRef.current) {
-      const rect = settingsRef.current.getBoundingClientRect();
-      return {
-        top: rect.top, // Đặt modal ở vị trí top của menu item
-        left: sidebarOpen ? 260 : 70, // Đặt modal ngay cạnh sidebar
-      };
-    }
-    return { top: 0, left: sidebarOpen ? 260 : 70 };
   };
 
   return (
@@ -80,10 +70,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           sx={{
             "& .MuiDrawer-paper": {
               width: "inherit",
-              backgroundColor: "#F8EDE3",
+              backgroundColor: "",
               color: "#993300",
               overflowX: "hidden",
               height: "100%",
+              borderRadius: "0 12px 12px 0",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
             },
           }}
         >
@@ -96,7 +88,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   animate="open"
                   exit="closed"
                 >
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: "#993300" }}>
+                  <Typography marginRight= "10px" variant="h7" fontWeight="bold" sx={{ color: "#993300" }}>
                     Admin Dashboard
                   </Typography>
                 </motion.div>
@@ -104,17 +96,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             </AnimatePresence>
             <IconButton
               onClick={toggleSidebar}
-              sx={{ color: "#993300" }}
+              sx={{
+                color: "#993300",
+                "&:hover": { color: "#b35900", transform: "scale(1.1)" },
+                transition: "color 0.3s ease, transform 0.3s ease",
+              }}
             >
               {sidebarOpen ? <ArrowBackIos /> : <ArrowForwardIos />}
             </IconButton>
           </Box>
-          <Divider sx={{ backgroundColor: "rgba(255,255,255,0.2)" }} />
-          <List sx={{ flexGrow: 1 }}>
+          <Divider sx={{ backgroundColor: "rgba(153, 51, 0, 0.2)" }} />
+          <List sx={{ flexGrow: 1, pt: 1 }}>
             {menuItems.map((item) => (
               <motion.div
                 key={item.text}
-                whileHover={{ scale: 1.05, x: 5 }}
+                whileHover={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <ListItem
@@ -122,12 +118,24 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   component={NavLink}
                   to={item.path}
                   sx={{
-                    "&:hover": { backgroundColor: "#DFD3C3" },
-                    "&.active": { backgroundColor: "#D0B8A8" },
-                    padding: "12px 16px",
+                    "&:hover": {
+                      backgroundColor: "rgba(179, 89, 0, 0.1)",
+                      borderLeft: "4px solid #993300",
+                    },
+                    "&.active": {
+                      backgroundColor: "#b35900",
+                      color: "white",
+                      "& .MuiListItemIcon-root": { color: "white" },
+                      "& .MuiListItemText-primary": { color: "white" },
+                    },
+                    padding: "14px 16px",
+                    borderRadius: "0 8px 8px 0",
+                    mb: 0.5,
                   }}
                 >
-                  <ListItemIcon sx={{ color: "#993300", minWidth: "40px" }}>{item.icon}</ListItemIcon>
+                  <ListItemIcon sx={{ color: "#993300", minWidth: "40px" }}>
+                    {item.icon}
+                  </ListItemIcon>
                   <AnimatePresence>
                     {sidebarOpen && (
                       <motion.div
@@ -146,21 +154,26 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </List>
 
           {/* Menu item "Cài đặt" ở dưới cùng */}
-          <List sx={{ marginTop: "auto" }}>
+          <List sx={{ marginTop: "auto", pb: 2 }}>
             <motion.div
-              whileHover={{ scale: 1.05, x: 5 }}
+              whileHover={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               <ListItem
                 button
                 onClick={settingsItem.action}
                 sx={{
-                  "&:hover": { backgroundColor: "#DFD3C3" },
-                  padding: "12px 16px",
+                  "&:hover": {
+                    backgroundColor: "rgba(179, 89, 0, 0.1)",
+                    borderLeft: "4px solid #993300",
+                  },
+                  padding: "14px 16px",
+                  borderRadius: "0 8px 8px 0",
                 }}
-                ref={settingsRef} // Gắn ref để lấy vị trí
               >
-                <ListItemIcon sx={{ color: "#993300", minWidth: "40px" }}>{settingsItem.icon}</ListItemIcon>
+                <ListItemIcon sx={{ color: "#993300", minWidth: "40px" }}>
+                  {settingsItem.icon}
+                </ListItemIcon>
                 <AnimatePresence>
                   {sidebarOpen && (
                     <motion.div
@@ -185,28 +198,37 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         onClose={() => setSettingsModalOpen(false)}
         sx={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-start" }}
       >
-        <Paper
-          sx={{
-            position: "absolute",
-            marginBottom: "5%",
-            width: 200,
-            p: 2,
-            backgroundColor: "#fff",
-            boxShadow: "none", // Bỏ viền đen (boxShadow)
-            border: "none", // Đảm bảo không có viền
-          }}
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
         >
-          <MenuItem
-            onClick={handleLogout}
+          <Paper
             sx={{
-              color: "#993300",
-              "&:hover": { backgroundColor: "#f5f5f5" },
-              borderRadius: "4px",
+              position: "absolute",
+              bottom: 80,
+              left: sidebarOpen,
+              width: 200,
+              p: 1,
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
             }}
           >
-            Đăng xuất
-          </MenuItem>
-        </Paper>
+            <MenuItem
+              onClick={handleLogout}
+              sx={{
+                color: "#993300",
+                "&:hover": { backgroundColor: "rgba(179, 89, 0, 0.1)" },
+                borderRadius: "8px",
+                py: 1.5,
+              }}
+            >
+              Đăng xuất
+            </MenuItem>
+          </Paper>
+        </motion.div>
       </Modal>
     </>
   );
