@@ -28,17 +28,24 @@ const AdminLogin = () => {
 
     if (!username || !password) {
       setError("Vui lòng nhập tên đăng nhập và mật khẩu.");
+      console.log("Lỗi: Thiếu tên đăng nhập hoặc mật khẩu", { username, password });
       return;
     }
 
     try {
+      console.log("Gửi yêu cầu đăng nhập", { username, password, rememberMe });
       const response = await api.post("/auth/login", { username, password });
+      console.log("Phản hồi từ API", response.data);
+
       const decoded = jwtDecode(response.data.accessToken);
+      console.log("Token đã giải mã", decoded);
 
       // Kiểm tra xem roles có chứa "ADMIN" không
       const roles = decoded.roles || []; // Đảm bảo roles là mảng, nếu không thì dùng mảng rỗng
+      console.log("Vai trò người dùng", roles);
       if (!roles.includes("ADMIN")) {
         setError("Bạn không có quyền truy cập trang quản trị!");
+        console.log("Lỗi: Không có vai trò ADMIN", { roles });
         return;
       }
 
@@ -52,10 +59,16 @@ const AdminLogin = () => {
           roles: roles, // Lưu cả roles vào localStorage nếu cần
         })
       );
+      console.log("Đã lưu vào localStorage", {
+        accessToken: response.data.accessToken,
+        refreshToken: response.data.refreshToken,
+        user: { id: decoded.id, username: decoded.username, roles },
+      });
 
       navigate("/admin/dashboard");
+      console.log("Chuyển hướng đến /admin/dashboard");
     } catch (error) {
-      console.error("Lỗi đăng nhập:", error.response);
+      console.error("Lỗi đăng nhập:", error.response?.data || error.message);
       setError(error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
     }
   };

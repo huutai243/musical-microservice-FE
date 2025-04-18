@@ -73,9 +73,7 @@ const ensureValidAccessToken = async () => {
 // Tạo axios instance
 const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // Loại bỏ Content-Type mặc định để tránh ghi đè
 });
 
 // Interceptor cho request
@@ -85,6 +83,10 @@ api.interceptors.request.use(
     const token = getAccessToken();
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    // Chỉ đặt Content-Type nếu chưa được đặt và không phải FormData
+    if (!config.headers["Content-Type"] && !(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
     }
     return config;
   },
