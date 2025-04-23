@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   Drawer, Box, Typography, IconButton, Divider, List, ListItem, ListItemIcon, ListItemText, Modal, Paper, MenuItem,
 } from "@mui/material";
-import { Dashboard as DashboardIcon, Store, Category, ShoppingCart, Inventory, People, ArrowForwardIos, ArrowBackIos, Settings as SettingsIcon } from "@mui/icons-material";
+import { Dashboard as DashboardIcon, Store, Category, ShoppingCart, Inventory, People, ArrowForwardIos, ArrowBackIos, Settings as SettingsIcon, RateReview } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from '../../utils/api';
@@ -41,6 +41,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { text: "Đơn Hàng", icon: <ShoppingCart />, path: "/admin/orders" },
     { text: "Kho Hàng", icon: <Inventory />, path: "/admin/inventory" },
     { text: "Người Dùng", icon: <People />, path: "/admin/users" },
+    { text: "Đánh Giá", icon: <RateReview />, path: "/admin/reviews" },
   ];
 
   const settingsItem = { text: "Cài đặt", icon: <SettingsIcon />, action: () => setSettingsModalOpen(true) };
@@ -114,7 +115,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <ListItem
-                  button
+                  button prophúc
                   component={NavLink}
                   to={item.path}
                   sx={{
@@ -153,7 +154,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             ))}
           </List>
 
-          {/* Menu item "Cài đặt" ở dưới cùng */}
           <List sx={{ marginTop: "auto", pb: 2 }}>
             <motion.div
               whileHover={{ scale: 1 }}
@@ -192,7 +192,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         </Drawer>
       </motion.div>
 
-      {/* Modal hiển thị khi bấm vào "Cài đặt" */}
       <Modal
         open={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}

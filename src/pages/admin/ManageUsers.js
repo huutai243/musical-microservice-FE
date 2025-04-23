@@ -15,10 +15,6 @@ import {
   Tooltip,
   Pagination,
   Modal,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -26,6 +22,10 @@ import {
   Snackbar,
   Alert,
   CardMedia,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { Search, Add, Edit, Delete } from "@mui/icons-material";
 import { motion } from "framer-motion";
@@ -61,18 +61,16 @@ const ManageUsers = () => {
         const response = await api.get("/users/all");
         console.log("Danh sách người dùng:", response.data);
 
-        // Lấy vai trò cho từng người dùng
         const usersWithRoles = await Promise.all(
           response.data.map(async (user) => {
             try {
               const roleResponse = await api.get(`/auth/user/${user.id}/role`);
               const roles = roleResponse.data.roles || [];
-              // Lấy vai trò đầu tiên (giả sử mỗi người dùng chỉ có 1 vai trò)
               const role = roles.length > 0 ? normalizeRole(roles[0]) : "User";
               return { ...user, role };
             } catch (error) {
               console.error(`Lỗi khi lấy vai trò cho người dùng ${user.id}:`, error);
-              return { ...user, role: "User" }; // Giá trị mặc định nếu lỗi
+              return { ...user, role: "User" };
             }
           })
         );
@@ -88,22 +86,12 @@ const ManageUsers = () => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (editItem?.avatarUrl && editItem.avatarUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(editItem.avatarUrl);
-      }
-    };
-  }, [editItem]);
-
   const handleOpenModal = async (item = null) => {
     if (item && item.id) {
       try {
-        // Lấy thông tin người dùng
         const userResponse = await api.get(`/users/${item.id}`);
         console.log("Thông tin người dùng:", userResponse.data);
 
-        // Lấy vai trò của người dùng
         const roleResponse = await api.get(`/auth/user/${item.id}/role`);
         const roles = roleResponse.data.roles || [];
         const role = roles.length > 0 ? normalizeRole(roles[0]) : "User";
@@ -116,7 +104,6 @@ const ManageUsers = () => {
           address: userResponse.data.address || "",
           avatarUrl: userResponse.data.avatarUrl || "",
           role: role,
-          avatarFile: null,
         });
       } catch (error) {
         console.error("Lỗi khi lấy thông tin người dùng hoặc vai trò:", error);
@@ -130,43 +117,15 @@ const ManageUsers = () => {
         username: "",
         email: "",
         password: "",
-        phoneNumber: "",
-        address: "",
-        avatarUrl: "",
-        role: "User",
-        avatarFile: null,
+        confirmPassword: "",
       });
     }
     setOpenModal(true);
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (["image/jpeg", "image/png"].includes(file.type)) {
-        const tempUrl = URL.createObjectURL(file);
-        setEditItem({
-          ...editItem,
-          avatarFile: file,
-          avatarUrl: tempUrl,
-        });
-      } else {
-        setSnackbarMessage("Vui lòng chọn file ảnh JPEG hoặc PNG!");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-      }
-    }
-  };
-
-  const handleSave = async () => {
-    if (!editItem.username || !editItem.email) {
-      setSnackbarMessage("Vui lòng nhập tên người dùng và email!");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
-    }
-    if (!editItem.id && !editItem.password) {
-      setSnackbarMessage("Vui lòng nhập mật khẩu khi tạo người dùng mới!");
+  const handleCreateUser = async () => {
+    if (!editItem.username || !editItem.email || !editItem.password || !editItem.confirmPassword) {
+      setSnackbarMessage("Vui lòng nhập đầy đủ tên tài khoản, email, mật khẩu và xác nhận mật khẩu!");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
       return;
@@ -178,76 +137,33 @@ const ManageUsers = () => {
       setSnackbarOpen(true);
       return;
     }
+    if (editItem.password !== editItem.confirmPassword) {
+      setSnackbarMessage("Mật khẩu và xác nhận mật khẩu không khớp!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
     try {
       setSaving(true);
-      let response;
       console.log("Dữ liệu gửi đi:", editItem);
-      const apiRole = editItem.role.toUpperCase();
-      if (editItem.id) {
-        // Cập nhật profile của user (phoneNumber, address)
-        await api.put(`/users/update-profile/${editItem.id}`, {
-          phoneNumber: editItem.phoneNumber,
-          address: editItem.address,
-        });
+      const response = await api.post("/auth/create-user", {
+        username: editItem.username,
+        email: editItem.email,
+        password: editItem.password,
+        role: "USER", // Vai trò mặc định
+      });
 
-        // Cập nhật vai trò của user
-        await api.put(`/auth/users/change-role`, {
-          userId: editItem.id,
-          newRole: apiRole,
-        });
-
-        // Cập nhật avatar của user
-        if (editItem.avatarFile) {
-          const formData = new FormData();
-          formData.append("image", editItem.avatarFile);
-          formData.append("userId", editItem.id.toString()); // Gửi userId dưới dạng chuỗi
-          console.log("FormData gửi đi:", [...formData.entries()]); // Log nội dung FormData
-          response = await api.put(`/users/update-avatar`, formData); // Loại bỏ header Content-Type
-          console.log("Phản hồi từ update-avatar:", response.data);
-        } else {
-          response = await api.get(`/users/${editItem.id}`);
-        }
-
-        console.log("Dữ liệu người dùng sau cập nhật:", response.data);
-        setUsers(users.map((u) => (u.id === editItem.id ? { ...response.data, role: editItem.role } : u)));
-        setSnackbarMessage("Người dùng đã được cập nhật thành công!");
-      } else {
-        // Tạo người dùng mới
-        response = await api.post("/users/create", {
-          username: editItem.username,
-          email: editItem.email,
-          password: editItem.password,
-          role: apiRole,
-        });
-
-        // Cập nhật vai trò cho người dùng mới
-        await api.post(`/auth/users/change-role`, {
-          userId: response.data.id,
-          newRole: apiRole,
-        });
-
-        // Cập nhật avatar cho người dùng mới
-        if (editItem.avatarFile) {
-          const formData = new FormData();
-          formData.append("image", editItem.avatarFile);
-          formData.append("userId", response.data.id.toString()); // Gửi userId dưới dạng chuỗi
-          console.log("FormData gửi đi:", [...formData.entries()]); // Log nội dung FormData
-          await api.put(`/users/update-avatar`, formData); // Loại bỏ header Content-Type
-        }
-
-        const newUserResponse = await api.get(`/users/${response.data.id}`);
-        console.log("Người dùng mới:", newUserResponse.data);
-        setUsers([...users, { ...newUserResponse.data, role: editItem.role }]);
-        setSnackbarMessage("Người dùng đã được tạo thành công!");
-      }
-
-      setOpenModal(false);
+      const newUserResponse = await api.get(`/users/${response.data.user.id}`);
+      console.log("Người dùng mới:", newUserResponse.data);
+      setUsers([...users, { ...newUserResponse.data, role: "User" }]);
+      setSnackbarMessage("Người dùng đã được tạo thành công!");
       setSnackbarSeverity("success");
+      setOpenModal(false);
     } catch (error) {
-      console.error("Lỗi khi lưu người dùng:", error);
+      console.error("Lỗi khi tạo người dùng:", error);
       console.error("Chi tiết lỗi:", error.response?.data);
-      let errorMessage = "Không thể lưu người dùng! Vui lòng thử lại.";
+      let errorMessage = "Không thể tạo người dùng! Vui lòng thử lại.";
       if (error.response) {
         if (error.response.status === 403) {
           errorMessage = "Bạn không có quyền thực hiện hành động này!";
@@ -259,9 +175,58 @@ const ManageUsers = () => {
       }
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       setSaving(false);
-      setSnackbarOpen(true);
+    }
+  };
+
+  const handleSave = async () => {
+    if (editItem.id) {
+      try {
+        setSaving(true);
+        console.log("Bắt đầu cập nhật người dùng...");
+        // Cập nhật profile của user
+        await api.put(`/users/update-profile/${editItem.id}`, {
+          phoneNumber: editItem.phoneNumber,
+          address: editItem.address,
+        });
+        console.log("Cập nhật profile thành công");
+        // Cập nhật vai trò của user
+        await api.put(`/auth/users/change-role`, {
+          userId: editItem.id,
+          newRole: editItem.role.toUpperCase(),
+        });
+        console.log("Cập nhật vai trò thành công");
+        const response = await api.get(`/users/${editItem.id}`);
+        console.log("Dữ liệu người dùng sau cập nhật:", response.data);
+        setUsers(users.map((u) => (u.id === editItem.id ? { ...response.data, role: editItem.role } : u)));
+        console.log("Đặt thông báo Snackbar...");
+        setSnackbarMessage("Người dùng đã được cập nhật thành công!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true); // Thêm dòng này
+        setOpenModal(false);
+      } catch (error) {
+        console.error("Lỗi khi cập nhật người dùng:", error);
+        console.error("Chi tiết lỗi:", error.response?.data);
+        let errorMessage = "Không thể cập nhật người dùng! Vui lòng thử lại.";
+        if (error.response) {
+          if (error.response.status === 403) {
+            errorMessage = "Bạn không có quyền thực hiện hành động này!";
+          } else if (error.response.status === 400) {
+            errorMessage = error.response.data.message || "Dữ liệu không hợp lệ!";
+          } else if (error.response.status === 404) {
+            errorMessage = "Người dùng không tồn tại!";
+          }
+        }
+        setSnackbarMessage(errorMessage);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      await handleCreateUser();
     }
   };
 
@@ -459,7 +424,7 @@ const ManageUsers = () => {
           </>
         )}
 
-        <Modal
+<Modal
           open={openModal}
           onClose={() => setOpenModal(false)}
           sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -479,110 +444,93 @@ const ManageUsers = () => {
             >
               {editItem?.id ? "Chỉnh Sửa Người Dùng" : "Thêm Người Dùng"}
             </Typography>
-            {editItem?.id && (
-              <TextField
-                label="ID"
-                value={editItem?.id || ""}
-                InputProps={{ readOnly: true }}
-                fullWidth
-                sx={{ mb: 2 }}
-              />
+            {editItem?.id ? (
+              <>
+                <TextField
+                  label="ID"
+                  value={editItem?.id || ""}
+                  InputProps={{ readOnly: true }}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Tên Người Dùng"
+                  value={editItem?.username || ""}
+                  onChange={(e) => setEditItem({ ...editItem, username: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                  disabled
+                />
+                <TextField
+                  label="Email"
+                  type="email"
+                  value={editItem?.email || ""}
+                  onChange={(e) => setEditItem({ ...editItem, email: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                  disabled
+                />
+                <TextField
+                  label="Số Điện Thoại"
+                  value={editItem?.phoneNumber || ""}
+                  onChange={(e) => setEditItem({ ...editItem, phoneNumber: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Địa Chỉ"
+                  value={editItem?.address || ""}
+                  onChange={(e) => setEditItem({ ...editItem, address: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Vai Trò</InputLabel>
+                  <Select
+                    label="Vai Trò"
+                    value={editItem?.role || "User"}
+                    onChange={(e) => setEditItem({ ...editItem, role: e.target.value })}
+                  >
+                    <MenuItem value="Admin">Admin</MenuItem>
+                    <MenuItem value="User">User</MenuItem>
+                  </Select>
+                </FormControl>
+              </>
+            ) : (
+              <>
+                <TextField
+                  label="Tên Tài Khoản"
+                  value={editItem?.username || ""}
+                  onChange={(e) => setEditItem({ ...editItem, username: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Email"
+                  type="email"
+                  value={editItem?.email || ""}
+                  onChange={(e) => setEditItem({ ...editItem, email: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Mật Khẩu"
+                  type="password"
+                  value={editItem?.password || ""}
+                  onChange={(e) => setEditItem({ ...editItem, password: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Xác Nhận Mật Khẩu"
+                  type="password"
+                  value={editItem?.confirmPassword || ""}
+                  onChange={(e) => setEditItem({ ...editItem, confirmPassword: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+              </>
             )}
-            <Box
-              sx={{
-                position: "relative",
-                width: 80,
-                height: 80,
-                mb: 2,
-                "&:hover .edit-icon": { opacity: 1 },
-              }}
-            >
-              <CardMedia
-                component="img"
-                image={editItem?.avatarUrl || "/default-avatar.png"}
-                alt={editItem?.username || "User"}
-                sx={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover" }}
-              />
-              <IconButton
-                className="edit-icon"
-                sx={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  opacity: 0,
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  color: "white",
-                  transition: "opacity 0.2s ease-in-out",
-                  "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.7)" },
-                }}
-                onClick={() => document.getElementById("avatar-input").click()}
-              >
-                <Edit />
-              </IconButton>
-              <input
-                type="file"
-                id="avatar-input"
-                hidden
-                accept="image/jpeg,image/png"
-                onChange={handleAvatarChange}
-              />
-            </Box>
-            <TextField
-              label="Tên Người Dùng"
-              value={editItem?.username || ""}
-              onChange={(e) => setEditItem({ ...editItem, username: e.target.value })}
-              fullWidth
-              sx={{ mb: 2 }}
-              disabled={editItem?.id}
-            />
-            <TextField
-              label="Email"
-              type="email"
-              value={editItem?.email || ""}
-              onChange={(e) => setEditItem({ ...editItem, email: e.target.value })}
-              fullWidth
-              sx={{ mb: 2 }}
-              disabled={editItem?.id}
-            />
-            {!editItem?.id && (
-              <TextField
-                label="Mật Khẩu"
-                type="password"
-                value={editItem?.password || ""}
-                onChange={(e) => setEditItem({ ...editItem, password: e.target.value })}
-                fullWidth
-                sx={{ mb: 2 }}
-              />
-            )}
-            <TextField
-              label="Số Điện Thoại"
-              value={editItem?.phoneNumber || ""}
-              onChange={(e) => setEditItem({ ...editItem, phoneNumber: e.target.value })}
-              fullWidth
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Địa Chỉ"
-              value={editItem?.address || ""}
-              onChange={(e) => setEditItem({ ...editItem, address: e.target.value })}
-              fullWidth
-              sx={{ mb: 2 }}
-            />
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel sx={{ color: "#993300" }}>Vai Trò</InputLabel>
-              <Select
-                value={editItem?.role || "User"}
-                onChange={(e) => setEditItem({ ...editItem, role: e.target.value })}
-                sx={{
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" },
-                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#b35900" },
-                }}
-              >
-                <MenuItem value="Admin">Admin</MenuItem>
-                <MenuItem value="User">Người Dùng</MenuItem>
-              </Select>
-            </FormControl>
             <Box display="flex" justifyContent="flex-end" gap={2}>
               <Button
                 variant="contained"

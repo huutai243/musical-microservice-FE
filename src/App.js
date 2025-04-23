@@ -26,6 +26,7 @@ import ManageProducts from './pages/admin/ManageProducts';
 import ManageCategories from './pages/admin/ManageCategories';
 import ManageOrders from './pages/admin/ManageOrders';
 import ManageInventory from './pages/admin/ManageInventory';
+import ManageReviews from './pages/admin/ManageReviews';
 
 // Import ProtectedAdminRoute
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
@@ -64,6 +65,7 @@ const App = () => {
           <Route path="/admin/categories" element={<ManageCategories />} />
           <Route path="/admin/orders" element={<ManageOrders />} />
           <Route path="/admin/inventory" element={<ManageInventory />} />
+          <Route path="/admin/reviews" element={<ManageReviews />} />
         </Route>
       </Routes>
     </Router>

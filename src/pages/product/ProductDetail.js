@@ -151,7 +151,7 @@ const ProductDetail = () => {
 
     try {
       await api.post(`/reviews`, reviewData);
-      const reviewsRes = await api.get(`/reviews/product/${id}`, { params: { page, size: 1 } });
+      const reviewsRes = await api.get(`/reviews/product/${id}`, { params: { page: page - 1, size } });
       setReviews(reviewsRes.data.content);
       setTotalPages(reviewsRes.data.totalPages);
       setNewReview({ rating: 0, comment: "" });
