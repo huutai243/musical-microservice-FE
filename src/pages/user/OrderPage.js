@@ -87,7 +87,6 @@ const OrderPage = () => {
       console.error("[fetchOrderDetails] Lỗi:", error);
       setSnackbarOpen(true);
     } finally {
-      //setFetchingOrder(false);
       setLoading(false);
     }
   };
@@ -111,37 +110,6 @@ const OrderPage = () => {
       setSnackbarOpen(true);
     }
   };
-
-  // useEffect(() => {
-  //   let attempts = 0;
-  //   const interval = setInterval(async () => {
-  //     attempts++;
-  //     try {
-  //       const res = await api.get(`/orders/get-by-correlation/${correlationId}`);
-
-  //       // LUÔN setOrder để hiển thị thông tin đơn hàng (kể cả lúc đang chờ PENDING_INVENTORY_VALIDATION).
-  //       setOrder(res.data);
-
-  //       if (res.data?.status !== "PENDING_INVENTORY_VALIDATION") {
-  //         // Nếu đã qua PENDING_INVENTORY_VALIDATION thì dừng polling.
-  //         clearInterval(interval);
-  //         setLoading(false);
-  //       }
-  //     } catch (e) {
-  //       console.error("[Polling] Lỗi lấy đơn:", e);
-  //       if (attempts >=10) {
-  //         clearInterval(interval);
-  //         setSnackbarMessage("Không thể xác nhận đơn hàng. Vui lòng thử lại sau.");
-  //         setSnackbarSeverity("error");
-  //         setSnackbarOpen(true);
-  //         setLoading(false);
-
-  //       }
-  //     }
-  //   }, 100);  
-
-  //   return () => clearInterval(interval);
-  // }, [correlationId]);
 
   useEffect(() => {
     fetchOrderDetails();
@@ -167,23 +135,16 @@ const OrderPage = () => {
 
   const handleRemoveItem = async (productId) => {
     try {
-      // Tìm item tương ứng với productId trong danh sách items của order
       const itemToRemove = order.items.find(item => item.productId === productId);
       if (!itemToRemove) {
         throw new Error("Không tìm thấy sản phẩm trong đơn hàng!");
       }
 
-      // Lấy orderId và itemId từ dữ liệu order
       const orderId = order.orderId;
       const itemId = itemToRemove.id;
 
-      // Gọi API xóa item khỏi order
       await api.delete(`/orders/${orderId}/items/${itemId}`);
-
-      // Gọi API hoặc logic xóa sản phẩm khỏi giỏ hàng (nếu cần)
       await removeFromCart(productId);
-
-      // Cập nhật lại thông tin đơn hàng sau khi xóa
       await fetchOrderDetails();
 
       setSnackbarMessage("Sản phẩm đã được xóa khỏi đơn hàng!");
@@ -196,7 +157,6 @@ const OrderPage = () => {
     setSnackbarOpen(true);
   };
 
-  // Hàm mở popup xác nhận
   const handleOpenConfirmDelete = (productId) => {
     const item = order.items.find(item => item.productId === productId);
     if (item) {
@@ -205,7 +165,6 @@ const OrderPage = () => {
     }
   };
 
-  // Hàm xử lý khi người dùng xác nhận xóa
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
 
@@ -213,13 +172,8 @@ const OrderPage = () => {
       const orderId = order.orderId;
       const itemId = itemToDelete.id;
 
-      // Gọi API xóa item khỏi order
       await api.delete(`/orders/${orderId}/items/${itemId}`);
-
-      // Gọi API hoặc logic xóa sản phẩm khỏi giỏ hàng (nếu cần)
       await removeFromCart(itemToDelete.productId);
-
-      // Cập nhật lại thông tin đơn hàng sau khi xóa
       await fetchOrderDetails();
 
       setSnackbarMessage("Sản phẩm đã được xóa khỏi đơn hàng!");
@@ -229,28 +183,26 @@ const OrderPage = () => {
       setSnackbarMessage(error.response?.data?.message || "Không thể xóa sản phẩm!");
       setSnackbarSeverity("error");
     } finally {
-      setConfirmDeleteOpen(false); // Đóng popup sau khi xử lý
-      setItemToDelete(null); // Reset item cần xóa
+      setConfirmDeleteOpen(false);
+      setItemToDelete(null);
       setSnackbarOpen(true);
     }
   };
 
-  // Hàm đóng popup mà không xóa
   const handleCloseConfirmDelete = () => {
     setConfirmDeleteOpen(false);
     setItemToDelete(null);
   };
 
-  // Kiểm tra xem thông tin đã đầy đủ chưa
   const isFormValid = () => {
     const basicInfoValid = userInfo.fullName && userInfo.email && userInfo.phone;
     if (!paymentMethod) return false;
 
-    if (["COD", "BANK"].includes(paymentMethod)) {
+    if (["COD", "BANK", "STRIPE"].includes(paymentMethod)) {
       return basicInfoValid;
     }
 
-    if (["MOMO", "PAYPAL", "STRIPE"].includes(paymentMethod)) {
+    if (["MOMO", "PAYPAL"].includes(paymentMethod)) {
       const cardDetailsValid = paymentDetails.cardNumber && paymentDetails.expiry && paymentDetails.cvv;
       return basicInfoValid && cardDetailsValid;
     }
@@ -258,7 +210,6 @@ const OrderPage = () => {
     return false;
   };
 
-  // Xử lý đặt hàng với API /payment
   const handleOrder = async () => {
     if (!isFormValid()) {
       setSnackbarMessage("Vui lòng điền đầy đủ thông tin!");
@@ -268,28 +219,37 @@ const OrderPage = () => {
     }
 
     try {
-      setFetchingOrder(true); //Mở loading
+      setFetchingOrder(true);
 
-      await api.post("/payment", { orderId: order.orderId, paymentMethod });
+      const response = await api.post("/payment/initiate", { orderId: order.orderId, paymentMethod });
 
-      setPaymentModalOpen(false); // đóng modal
-      //setFetchingOrder(true);
+      if (paymentMethod === "STRIPE") {
+        // Tính toán vị trí để cửa sổ popup hiển thị ở giữa màn hình
+        const width = 600; // Chiều rộng cửa sổ popup
+        const height = 700; // Chiều cao cửa sổ popup
+        const left = (window.screen.width - width) / 2; // Vị trí left để căn giữa
+        const top = (window.screen.height - height) / 2; // Vị trí top để căn giữa
 
-      // Gọi fetch để cập nhật trạng thái mới
-      await fetchOrderDetails();
-
-      await fetchCart();
-
-      setFetchingOrder(false); //Đóng loading
-
-      setSnackbarMessage("Đặt hàng thành công! Thông tin chi tiết đã được gửi vào email của bạn!");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-
+        // Mở cửa sổ popup với kích thước và vị trí đã tính toán
+        window.open(
+          response.data,
+          "StripePaymentWindow",
+          `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+        );
+      } else {
+        setPaymentModalOpen(false);
+        await fetchOrderDetails();
+        await fetchCart();
+        setSnackbarMessage("Đặt hàng thành công! Thông tin chi tiết đã được gửi vào email của bạn!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      }
     } catch (error) {
       setSnackbarMessage(error.response?.data?.message || "Thanh toán thất bại!");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
+    } finally {
+      setFetchingOrder(false);
     }
   };
 
@@ -372,9 +332,7 @@ const OrderPage = () => {
           </Alert>
         )}
 
-
         <Grid container spacing={4}>
-          {/* Thông tin đơn hàng */}
           <Grid item xs={12} md={8}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -473,7 +431,6 @@ const OrderPage = () => {
                               )}
                             </Box>
                           </TableCell>
-
                         </motion.tr>
                       ))}
                     </TableBody>
@@ -483,7 +440,6 @@ const OrderPage = () => {
             </motion.div>
           </Grid>
 
-          {/* Thanh toán */}
           <Grid item xs={12} md={4}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -511,25 +467,25 @@ const OrderPage = () => {
                       py: 2,
                       fontSize: "0.8rem",
                       borderColor: order?.status === "PAYMENT_SUCCESS"
-                        ? "#4CAF50"  // Màu viền xanh khi thành công
-                        : "#993300", // Màu viền mặc định
+                        ? "#4CAF50"
+                        : "#993300",
                       color: order?.status === "PAYMENT_SUCCESS"
-                        ? "#4CAF50"  // Màu chữ xanh khi thành công
-                        : "#993300", // Màu chữ mặc định
+                        ? "#4CAF50"
+                        : "#993300",
                       "&:hover": {
                         borderColor: order?.status === "PAYMENT_SUCCESS"
-                          ? "#45a049" // Màu viền hover xanh đậm
+                          ? "#45a049"
                           : "#993300",
                         backgroundColor: order?.status === "PAYMENT_SUCCESS"
-                          ? "rgba(76, 175, 80, 0.05)" // Nền trong suốt với độ trong suốt nhẹ
+                          ? "rgba(76, 175, 80, 0.05)"
                           : "rgba(153, 51, 0, 0.1)",
                       },
                       "&.Mui-disabled": {
                         borderColor: order?.status === "PAYMENT_SUCCESS"
-                          ? "#4CAF50" // Giữ viền xanh khi disabled nhưng đã thành công
-                          : "#bdbdbd", // Màu xám cho các trường hợp disabled khác
+                          ? "#4CAF50"
+                          : "#bdbdbd",
                         color: order?.status === "PAYMENT_SUCCESS"
-                          ? "#4CAF50 !important" // Ưu tiên màu xanh khi đã thành công
+                          ? "#4CAF50 !important"
                           : "#bdbdbd !important",
                         opacity: 0.9
                       },
@@ -580,7 +536,7 @@ const OrderPage = () => {
       <Dialog
         open={paymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}
-        key={order?.status} // Reset form khi trạng thái thay đổi
+        key={order?.status}
       >
         <DialogTitle sx={{ color: "#993300" }}>Chọn Phương Thức Thanh Toán</DialogTitle>
         <DialogContent>
@@ -625,7 +581,6 @@ const OrderPage = () => {
             </Select>
           </FormControl>
 
-          {/* Thông tin người nhận */}
           <Typography variant="h6" sx={{ mb: 2, color: "#993300" }}>
             Thông Tin Người Nhận
           </Typography>
@@ -655,8 +610,7 @@ const OrderPage = () => {
             sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
           />
 
-          {/* Thông tin thanh toán */}
-          {["MOMO", "PAYPAL", "STRIPE"].includes(paymentMethod) && (
+          {["MOMO", "PAYPAL"].includes(paymentMethod) && (
             <>
               <Typography variant="h6" sx={{ mb: 2, color: "#993300" }}>
                 Thông Tin Thanh Toán

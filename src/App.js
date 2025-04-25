@@ -16,6 +16,7 @@ import Product from './pages/product/Product';
 import Discount from './pages/user/Discount';
 import SearchResults from './pages/product/SearchResults';
 import OrderPage from './pages/user/OrderPage';
+import PaymentSuccessPage from './components/PaymentSuccessPage';
 import Test from './pages/Test';
 
 // Import các thành phần admin
@@ -53,6 +54,7 @@ const App = () => {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/order/:correlationId" element={<OrderPage />} />
         <Route path="/test" element={<Test />} />
+        <Route path="/payment-success" element={<PaymentSuccessPage />} />
 
         {/* Route dành cho admin login (không cần bảo vệ) */}
         <Route path="/admin" element={<AdminLogin />} />
