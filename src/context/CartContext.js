@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../utils/api";
 
 const CartContext = createContext();
@@ -8,14 +8,12 @@ export const CartProvider = ({ children }) => {
   const [cartCount, setCartCount] = useState(0);
 
   // Lấy giỏ hàng từ API
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) return;
   
       const response = await api.get(`/cart/${user.id}`);
-  
-      // Nếu không phải mảng, gán mảng rỗng
       const items = Array.isArray(response.data) ? response.data : [];
   
       const formattedCart = items.map(item => ({
@@ -30,7 +28,8 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       console.error("Lỗi khi lấy giỏ hàng:", error);
     }
-  };
+  }, []); // 👈 dependencies là []
+  
   
 
 

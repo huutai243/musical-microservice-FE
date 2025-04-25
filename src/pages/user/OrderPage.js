@@ -111,13 +111,57 @@ const OrderPage = () => {
     }
   };
 
+
+  // useEffect(() => {
+  //   fetchOrderDetails();
+  //   const interval = setInterval(() => {
+  //     fetchOrderDetails();
+  //   }, 100);
+  //   return () => clearInterval(interval);
+  // }, [correlationId]);
+
   useEffect(() => {
-    fetchOrderDetails();
-    const interval = setInterval(() => {
-      fetchOrderDetails();
-    }, 100);
+    let interval;
+    let lastStatus = null;
+    let lastItemStatuses = "";
+  
+    const pollOrder = async () => {
+      try {
+        const res = await api.get(`/orders/get-by-correlation/${correlationId}`);
+        const newOrder = res.data;
+        const itemStatuses = newOrder.items.map(i => i.status).join(",");
+  
+        const isChanged = newOrder.status !== lastStatus || itemStatuses !== lastItemStatuses;
+  
+        if (isChanged) {
+          setOrder(newOrder);
+          lastStatus = newOrder.status;
+          lastItemStatuses = itemStatuses;
+        }
+  
+        if (newOrder.status === "PAYMENT_SUCCESS") {
+          setConfirmEnabled(true);
+          setPaymentModalOpen(false);
+          await fetchCart();
+          clearInterval(interval);
+        }
+      } catch (error) {
+        console.error("Lỗi fetch đơn hàng:", error);
+        setSnackbarMessage("Không thể lấy dữ liệu đơn hàng!");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    pollOrder();
+    interval = setInterval(pollOrder, 2000); // mỗi 2 giây
+  
     return () => clearInterval(interval);
   }, [correlationId]);
+  
+  
 
   useEffect(() => {
     if (paymentModalOpen) {
