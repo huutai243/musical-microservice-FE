@@ -242,11 +242,11 @@ const OrderPage = () => {
     const basicInfoValid = userInfo.fullName && userInfo.email && userInfo.phone;
     if (!paymentMethod) return false;
 
-    if (["COD", "BANK", "STRIPE"].includes(paymentMethod)) {
+    if (["COD", "BANK", "STRIPE", "PAYPAL"].includes(paymentMethod)) {
       return basicInfoValid;
     }
 
-    if (["MOMO", "PAYPAL"].includes(paymentMethod)) {
+    if (["MOMO"].includes(paymentMethod)) {
       const cardDetailsValid = paymentDetails.cardNumber && paymentDetails.expiry && paymentDetails.cvv;
       return basicInfoValid && cardDetailsValid;
     }

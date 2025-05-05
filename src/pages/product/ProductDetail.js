@@ -97,6 +97,13 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        // Kiểm tra xem có token trong localStorage hay không
+        const accessToken = localStorage.getItem("accessToken");
+        if (!accessToken) {
+          setUser(null); // Nếu không có token, đặt user là null
+          return;
+        }
+  
         const response = await api.get('/users/me');
         setUser(response.data);
         setFormData({
@@ -107,19 +114,33 @@ const ProductDetail = () => {
           address: response.data.address || '',
         });
       } catch (error) {
-        console.error("Lỗi lấy thông tin user:", error);
-        navigate('/login');
+        if (error.response && error.response.status === 401) {
+          setUser(null); // Xử lý lỗi 401: người dùng chưa đăng nhập
+        } else {
+          console.error("Lỗi lấy thông tin user:", error);
+          setUser(null);
+        }
       }
     };
-
+  
     fetchUserProfile();
-  }, [navigate]);
+  }, []);
 
   const increaseQuantity = () => setQuantity((prev) => (prev < inventory ? prev + 1 : prev));
   const decreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : prev));
 
   const addToCartHandler = async () => {
     if (inventory === 0) return;
+  
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    const accessToken = localStorage.getItem("accessToken");
+        if (!accessToken) {
+      setSnackbarMessage("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+      return;
+    }
+  
     try {
       await addToCart(id, quantity);
       await fetchCart();
@@ -348,7 +369,8 @@ const ProductDetail = () => {
                   <Rating value={review.rating} readOnly precision={1} />
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{review.comment}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {user.email} - {new Date().toLocaleDateString("vi-VN")} {/* Giả sử không có timestamp */}
+                    {/* {user.email} -  */}
+                    {new Date().toLocaleDateString("vi-VN")} 
                   </Typography>
                 </Box>
               ))}
