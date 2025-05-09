@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Container,
   Typography,
@@ -55,6 +55,7 @@ const OrderPage = () => {
   const { removeFromCart, fetchCart } = useCart();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const paymentWindowRef = useRef(null); // Lưu tham chiếu đến cửa sổ popup
 
   const [userInfo, setUserInfo] = useState({
     fullName: "",
@@ -77,14 +78,20 @@ const OrderPage = () => {
       console.log("✅ Dữ liệu order trả về:", response.data);
       setOrder(response.data);
 
-      // TỰ ĐỘNG KÍCH HOẠT XÁC NHẬN NẾU ĐÃ THANH TOÁN
       if (response.data.status === "PAYMENT_SUCCESS") {
         setConfirmEnabled(true);
-        setPaymentModalOpen(false); // Đóng modal nếu đang mở
+        setPaymentModalOpen(false);
+        // Đóng cửa sổ popup nếu nó đang mở
+        if (paymentWindowRef.current && !paymentWindowRef.current.closed) {
+          paymentWindowRef.current.close();
+          paymentWindowRef.current = null;
+        }
       }
       await fetchCart();
     } catch (error) {
       console.error("[fetchOrderDetails] Lỗi:", error);
+      setSnackbarMessage("Không thể lấy dữ liệu đơn hàng!");
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
       setLoading(false);
@@ -111,38 +118,34 @@ const OrderPage = () => {
     }
   };
 
-
-  // useEffect(() => {
-  //   fetchOrderDetails();
-  //   const interval = setInterval(() => {
-  //     fetchOrderDetails();
-  //   }, 100);
-  //   return () => clearInterval(interval);
-  // }, [correlationId]);
-
   useEffect(() => {
     let interval;
     let lastStatus = null;
     let lastItemStatuses = "";
-  
+
     const pollOrder = async () => {
       try {
         const res = await api.get(`/orders/get-by-correlation/${correlationId}`);
         const newOrder = res.data;
-        const itemStatuses = newOrder.items.map(i => i.status).join(",");
-  
+        const itemStatuses = newOrder.items.map((i) => i.status).join(",");
+
         const isChanged = newOrder.status !== lastStatus || itemStatuses !== lastItemStatuses;
-  
+
         if (isChanged) {
           setOrder(newOrder);
           lastStatus = newOrder.status;
           lastItemStatuses = itemStatuses;
         }
-  
+
         if (newOrder.status === "PAYMENT_SUCCESS") {
           setConfirmEnabled(true);
           setPaymentModalOpen(false);
           await fetchCart();
+          // Đóng cửa sổ popup nếu nó đang mở
+          if (paymentWindowRef.current && !paymentWindowRef.current.closed) {
+            paymentWindowRef.current.close();
+            paymentWindowRef.current = null;
+          }
           clearInterval(interval);
         }
       } catch (error) {
@@ -154,14 +157,12 @@ const OrderPage = () => {
         setLoading(false);
       }
     };
-  
+
     pollOrder();
-    interval = setInterval(pollOrder, 2000); // mỗi 2 giây
-  
+    interval = setInterval(pollOrder, 2000);
+
     return () => clearInterval(interval);
   }, [correlationId]);
-  
-  
 
   useEffect(() => {
     if (paymentModalOpen) {
@@ -179,7 +180,7 @@ const OrderPage = () => {
 
   const handleRemoveItem = async (productId) => {
     try {
-      const itemToRemove = order.items.find(item => item.productId === productId);
+      const itemToRemove = order.items.find((item) => item.productId === productId);
       if (!itemToRemove) {
         throw new Error("Không tìm thấy sản phẩm trong đơn hàng!");
       }
@@ -202,7 +203,7 @@ const OrderPage = () => {
   };
 
   const handleOpenConfirmDelete = (productId) => {
-    const item = order.items.find(item => item.productId === productId);
+    const item = order.items.find((item) => item.productId === productId);
     if (item) {
       setItemToDelete(item);
       setConfirmDeleteOpen(true);
@@ -267,19 +268,23 @@ const OrderPage = () => {
 
       const response = await api.post("/payment/initiate", { orderId: order.orderId, paymentMethod });
 
-      if (paymentMethod === "STRIPE") {
-        // Tính toán vị trí để cửa sổ popup hiển thị ở giữa màn hình
-        const width = 600; // Chiều rộng cửa sổ popup
-        const height = 700; // Chiều cao cửa sổ popup
-        const left = (window.screen.width - width) / 2; // Vị trí left để căn giữa
-        const top = (window.screen.height - height) / 2; // Vị trí top để căn giữa
+      if (["STRIPE", "PAYPAL"].includes(paymentMethod)) {
+        const width = 600;
+        const height = 700;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
 
-        // Mở cửa sổ popup với kích thước và vị trí đã tính toán
-        window.open(
+        // Mở cửa sổ popup và lưu tham chiếu
+        paymentWindowRef.current = window.open(
           response.data,
-          "StripePaymentWindow",
+          paymentMethod === "STRIPE" ? "StripePaymentWindow" : "PaypalPaymentWindow",
           `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
         );
+
+        // Kiểm tra xem cửa sổ có mở thành công không
+        if (!paymentWindowRef.current) {
+          throw new Error("Không thể mở cửa sổ thanh toán. Vui lòng kiểm tra cài đặt trình duyệt.");
+        }
       } else {
         setPaymentModalOpen(false);
         await fetchOrderDetails();
@@ -289,7 +294,7 @@ const OrderPage = () => {
         setSnackbarOpen(true);
       }
     } catch (error) {
-      setSnackbarMessage(error.response?.data?.message || "Thanh toán thất bại!");
+      setSnackbarMessage(error.message || error.response?.data?.message || "Thanh toán thất bại!");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -612,13 +617,13 @@ const OrderPage = () => {
               </MenuItem>
               <MenuItem value="PAYPAL">
                 <Box display="flex" alignItems="center">
-                  <CreditCardIcon sx={{ mr: 1, color: "#993300" }} />
+                  <CreditCardIcon sx={{ mr: 1, color: "#003087" }} />
                   Thanh toán qua Paypal
                 </Box>
               </MenuItem>
               <MenuItem value="STRIPE">
                 <Box display="flex" alignItems="center">
-                  <CreditCardIcon sx={{ mr: 1, color: "#993300" }} />
+                  <CreditCardIcon sx={{ mr: 1, color: "#635BFF" }} />
                   Thanh toán qua Stripe
                 </Box>
               </MenuItem>
@@ -654,7 +659,7 @@ const OrderPage = () => {
             sx={{ mb: 2, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#993300" } }}
           />
 
-          {["MOMO", "PAYPAL"].includes(paymentMethod) && (
+          {["MOMO"].includes(paymentMethod) && (
             <>
               <Typography variant="h6" sx={{ mb: 2, color: "#993300" }}>
                 Thông Tin Thanh Toán
