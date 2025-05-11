@@ -115,7 +115,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <ListItem
-                  button prophúc
+                  button
                   component={NavLink}
                   to={item.path}
                   sx={{
